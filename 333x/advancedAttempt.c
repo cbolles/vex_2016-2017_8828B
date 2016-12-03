@@ -19,12 +19,26 @@
 int lockArmPosition = nMotorEncoder[topLeft];
 int additionPower;
 
+
 void moveShooter(int speed)
 {
 	motor[bottomLeft] = speed;
 	motor[bottomRight] = speed;
 	motor[topLeft] = speed;
 	motor[topRight] = speed;
+}
+
+void lockArm()
+{
+	if(lockArmPosition <= nMotorEncoder[topLeft])
+	{
+		moveShooter(5 + additionPower); //If it counties to slip, keep additing power
+		additionPower += 2; //Increment by 2
+	}
+	else
+	{
+		moveShooter(0); //Dont move if fine
+	}
 }
 
 void driveControl()
@@ -63,16 +77,7 @@ void dumpControl()
 		}
 		else
 		{
-			//Put in lock command
-			if(lockArmPosition <= nMotorEncoder[topLeft])
-			{
-				moveShooter(5 + additionPower); //If it counties to slip, keep additing power
-				additionPower += 2; //Increment by 2
-			}
-			else
-			{
-				moveShooter(0); //Dont move if fine
-			}
+			lockArm();
 		}
 	}
 	else //If bottom sensor pressed
