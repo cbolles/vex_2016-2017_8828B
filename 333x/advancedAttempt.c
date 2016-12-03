@@ -17,6 +17,7 @@
 #define C1RX vexRT[Ch1]
 
 int lockArmPosition = nMotorEncoder[topLeft];
+int additionPower;
 
 void moveShooter(int speed)
 {
@@ -32,36 +33,49 @@ void driveControl()
 	motor[LE] =  -C1LY + C1RX;
 	motor[RI] =  C1LY + C1RX;
 	motor[BK] = -C1LX + C1RX;
+	lockArmPosition = nMotorEncoder[topLeft];
 }
 
 //Basic up down moving, when not suppose to move, adds power to make sure it wont move
 void dumpControl()
 {
-	if(!SensorValue[bottomLimit])
+	if(!SensorValue[bottomLimit]) //While not touching botto sensor
 	{
-
 		if(vexRT[Btn6U])
 		{
+			additionPower = 0;
 			moveShooter(75);
 		}
 		else if(vexRT[Btn6D])
 		{
+			additionPower = 0;
 			moveShooter(-75);
 		}
 		else if(vexRT[Btn5U])
 		{
+			additionPower = 0;
 			moveShooter(30);
 		}
 		else if(vexRT[Btn5D])
 		{
+			additionPower = 0;
 			moveShooter(-30);
 		}
 		else
 		{
-			moveShooter(0);
+			//Put in lock command
+			if(lockArmPosition <= nMotorEncoder[topLeft])
+			{
+				moveShooter(5 + additionPower); //If it counties to slip, keep additing power
+				additionPower += 2; //Increment by 2
+			}
+			else
+			{
+				moveShooter(0); //Dont move if fine
+			}
 		}
 	}
-	else
+	else //If bottom sensor pressed
 	{
 		moveShooter(20);
 	}
@@ -73,5 +87,6 @@ task main()
 	{
 		driveControl();
 		dumpControl();
+		wait10Msec(2); //Motors can only be updated every 20ms
 	}
 }
