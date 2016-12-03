@@ -33,6 +33,7 @@ void moveShooter(int speed)
 	motor[bottomRight] = speed;
 	motor[topLeft] = speed;
 	motor[topRight] = speed;
+	lockArmPosition = nMotorEncoder[topRight];
 }
 
 void lockArm()
