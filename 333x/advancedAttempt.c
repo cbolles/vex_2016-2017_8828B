@@ -42,6 +42,10 @@ void lockArm()
 	{
 		additionPower += 2; //Increment by 2
 	}
+	else if(lockArmPosition < nMotorEncoder[topRight] - 3)
+	{
+		additionPower -=2;
+	}
 	moveShooter(additionPower); //Zero if locked it on its own
 }
 
