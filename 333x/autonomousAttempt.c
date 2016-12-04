@@ -75,23 +75,28 @@ task main()
 {
 	nMotorEncoder[topRight] = 0;
 
-	driveForward(75);//Knock off prload
-	wait1Msec(750);
+	driveForward(75);//Move away from wall
+	wait1Msec(1000);
+	driveForward(0);
 
-	moveShooterDegree(15, 50); //Lock stand offs into place
-	moveShooterDegree(-10, 30);
-	wait1Msec(250);
-	while(SensorValue[wallSonar] > 1.5) //Goes up to wall
+	moveShooterDegree(75, 50); //Lock stand offs into place
+	moveShooterDegree(-50, 50);
+	moveShooterDegree(50, 50);
+
+	while(SensorValue[wallSonar] > 11) //Goes up to wall
 	{
 		driveForward(110);
 	}
 	driveForward(0);
 
-	moveShooterDegree(120, 75);//Dump Stars
+	moveShooterDegree(45, 75);//Dump Stars
 
 	driveSideways('R', 50);//Knock off stars on wall
-	wait1Msec(1000);
+	wait1Msec(1750);
 	driveSideways('L', 50);
-	wait1Msec(2000);
+	wait1Msec(2500);
 	driveSideways('R', 0);
+	driveForward(-75);
+	wait1Msec(750);
+	driveForward(0);
 }
