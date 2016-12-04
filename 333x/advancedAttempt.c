@@ -128,7 +128,14 @@ void dumpControl()
 	}
 	else //If bottom sensor pressed
 	{
-		moveShooter(20);
+		if(vexRT[Btn6U])
+		{
+			moveShooter(75);
+		}
+		else
+		{
+			moveShooter(0);
+		}
 	}
 }
 
