@@ -38,15 +38,11 @@ void moveShooter(int speed)
 
 void lockArm()
 {
-	if(lockArmPosition > nMotorEncoder[topRight])
+	if(lockArmPosition > nMotorEncoder[topRight]+3)
 	{
-		moveShooter(5 + additionPower); //If it continues to slip, keep additing power
 		additionPower += 2; //Increment by 2
 	}
-	else
-	{
-		moveShooter(0); //Dont move if fine
-	}
+	moveShooter(additionPower); //Zero if locked it on its own
 }
 
 void driveControl()
