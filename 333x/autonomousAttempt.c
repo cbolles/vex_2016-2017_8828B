@@ -79,11 +79,12 @@ task main()
 	wait1Msec(1000);
 	driveForward(0);
 
-	moveShooterDegree(75, 50); //Lock stand offs into place
-	moveShooterDegree(-50, 50);
-	moveShooterDegree(50, 50);
+	moveShooterDegree(50, 50); //Lock stand offs into place
+	wait1Msec(500);
+	moveShooterDegree(-5, 75);
+	moveShooterDegree(10, 75);
 
-	while(SensorValue[wallSonar] > 11) //Goes up to wall
+	while(SensorValue[wallSonar] > 9) //Goes up to wall
 	{
 		driveForward(110);
 	}
