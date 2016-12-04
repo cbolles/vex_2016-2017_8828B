@@ -24,6 +24,13 @@
 int lockArmPosition = nMotorEncoder[topRight];
 int additionPower = 0;
 
+int degreesToTicks(int degrees)
+{
+	return (int)(degrees / 0.078);//0079 degrees per tick
+}
+
+
+
 //Gets Joystick Values with dead zone
 int * getJoystick()
 {
@@ -74,6 +81,26 @@ void moveShooter(int speed)
 	lockArmPosition = nMotorEncoder[topRight];
 }
 
+void moveShooterDegree(float degrees, int speed)
+{
+	nMotorEncoder[topRight] = 0;
+	if(degrees < 0)
+	{
+		while(nMotorEncoder[topRight] > degreesToTicks(degrees))
+		{
+			moveShooter(-speed);
+		}
+	}
+	else
+	{
+		while(nMotorEncoder[topRight] < degreesToTicks(degrees))
+		{
+			moveShooter(speed);
+		}
+	}
+	moveShooter(0);
+}
+
 void lockArm()
 {
 	if(lockArmPosition > nMotorEncoder[topRight]+3)
@@ -99,7 +126,7 @@ void driveControl()
 //Basic up down moving, when not suppose to move, adds power to make sure it wont move
 void dumpControl()
 {
-	if(!SensorValue[bottomLimit]) //While not touching bottom sensor
+	if(!vexRT[Btn5U]) //While not touching bottom sensor
 	{
 		if(vexRT[Btn6U])
 		{
@@ -128,14 +155,7 @@ void dumpControl()
 	}
 	else //If bottom sensor pressed
 	{
-		if(vexRT[Btn6U])
-		{
-			moveShooter(75);
-		}
-		else
-		{
-			moveShooter(0);
-		}
+		moveShooterDegree(1, 30);
 	}
 }
 
