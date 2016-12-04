@@ -22,10 +22,25 @@ int degreesToTicks(int degrees)
 {
 	return (int)(degrees / 0.078);//0079 degrees per tick
 }
+
 void driveForward(int speed)
 {
+	motor[RI] = -speed;
 	motor[LE] = speed;
-	motor[RI] = speed;
+}
+
+void driveSideways(char direction, int speed)
+{
+	if(direction == 'R')
+	{
+		motor[FR] = -speed;
+		motor[BK] = speed;
+	}
+	else
+	{
+		motor[FR] = speed;
+		motor[BK] = -speed;
+	}
 }
 
 void moveShooter(int speed)
@@ -59,14 +74,24 @@ void moveShooterDegree(float degrees, int speed)
 task main()
 {
 	nMotorEncoder[topRight] = 0;
-	moveShooterDegree(40, 35);
-	//while(SensorValue[wallSonar] > 2) //Goes up to wall
-	//{
-	//	driveForward(110);
-	//}
-	//driveForward(0);
 
+	driveForward(75);//Knock off prload
+	wait1Msec(750);
 
+	moveShooterDegree(15, 50); //Lock stand offs into place
+	moveShooterDegree(-10, 30);
+	wait1Msec(250);
+	while(SensorValue[wallSonar] > 1.5) //Goes up to wall
+	{
+		driveForward(110);
+	}
+	driveForward(0);
 
+	moveShooterDegree(120, 75);//Dump Stars
 
+	driveSideways('R', 50);//Knock off stars on wall
+	wait1Msec(1000);
+	driveSideways('L', 50);
+	wait1Msec(2000);
+	driveSideways('R', 0);
 }
