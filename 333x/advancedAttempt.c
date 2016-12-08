@@ -26,7 +26,7 @@ int additionPower = 0;
 
 int degreesToTicks(int degrees)
 {
-	return (int)(degrees / 0.078);//0079 degrees per tick
+	return (int)(degrees / 0.078);//.0078 degrees per tick
 }
 
 
