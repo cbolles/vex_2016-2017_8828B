@@ -90,11 +90,11 @@ void moveLift()
 	}
 	if(vexRT[Btn8U])
 	{
-		motor[lock] = 75;
-	}
-	else if(vexRT[Btn5D])
-	{
 		motor[lock] = -75;
+	}
+	else if(vexRT[Btn8D])
+	{
+		motor[lock] = 75;
 	}
 	else
 	{
@@ -197,6 +197,7 @@ task main()
 	{
 		driveControl();
 		dumpControl();
+		moveLift();
 		wait10Msec(2); //Motors can only be updated every 20ms
 	}
 }
