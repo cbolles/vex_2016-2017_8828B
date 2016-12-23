@@ -286,7 +286,7 @@ task main()
 	while(true)
 	{
 		driveControl();
-		//dumpControl();
+		dumpControl();
 		movePincher();
 		pincherOpenClose();
 		wait10Msec(2); //Motors can only be updated every 20ms
