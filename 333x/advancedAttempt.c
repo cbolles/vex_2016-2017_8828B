@@ -246,7 +246,7 @@ void pincherOpenClose()
 //Basic up down moving, when not suppose to move, adds power to make sure it wont move
 void dumpControl()
 {
-	if(!vexRT[Btn5U]) //While not touching bottom sensor
+	if(!vexRT[Btn7U]) //While not touching bottom sensor
 	{
 		if(vexRT[Btn6U])
 		{
@@ -258,16 +258,6 @@ void dumpControl()
 			additionPower = 0;
 			moveShooter(-75);
 		}
-		else if(vexRT[Btn5U])
-		{
-			additionPower = 0;
-			moveShooter(30);
-		}
-		else if(vexRT[Btn5D])
-		{
-			additionPower = 0;
-			moveShooter(-30);
-		}
 		else
 		{
 			lockArm();
@@ -275,7 +265,9 @@ void dumpControl()
 	}
 	else //If bottom sensor pressed
 	{
-		moveShooterDegree(1, 30);
+		moveShooter(30);
+		wait1Msec(500);
+		moveShooter(0);
 	}
 }
 
