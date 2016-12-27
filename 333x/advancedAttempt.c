@@ -169,6 +169,9 @@ void pincherOpenClose()
 	int positionCloseRight = 2758;
 	int positionCloseLeft = 3014;
 
+	int positionFarRight = 229;
+	int positionFarLeft = 89;
+
 	int pincerSpeed = 80;
 
 	int tolorance = 80;
@@ -236,10 +239,35 @@ void pincherOpenClose()
 			motor[leftPincer] = 0;
 		}
 	}
-	else
+	else if(vexRT[Btn8D])//Getting into tight corners
 	{
-		//motor[rightPincer] = 0;
-		//motor[leftPincer] = 0;
+				//right pincer
+		if(SensorValue[rightPot]-zeroRightPot > positionFarRight+tolorance)
+		{
+			motor[rightPincer] = pincerSpeed;
+		}
+		else if(SensorValue[rightPot]-zeroRightPot < positionFarRight-tolorance)
+		{
+			motor[rightPincer] = -pincerSpeed;
+		}
+		else
+		{
+			motor[rightPincer] = 0;
+		}
+
+		//left pincher
+		if(SensorValue[leftPot]-zeroLeftPot < positionFarLeft-tolorance)
+		{
+			motor[leftPincer] = pincerSpeed;
+		}
+		else if(SensorValue[leftPot]-zeroLeftPot > positionFarLeft+tolorance)
+		{
+			motor[leftPincer] = -pincerSpeed;
+		}
+		else
+		{
+			motor[leftPincer] = 0;
+		}
 	}
 }
 
