@@ -108,7 +108,7 @@ void moveShooterDegree(float degrees, int speed)
 
 void lockArm()
 {
-	if(lockArmPosition > nMotorEncoder[topRight]+10)
+	if(lockArmPosition > nMotorEncoder[topRight]+3)
 	{
 		additionPower += 2; //Increment by 2
 	}
