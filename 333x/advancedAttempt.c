@@ -108,7 +108,7 @@ void moveShooterDegree(float degrees, int speed)
 
 void lockArm()
 {
-	if(lockArmPosition > nMotorEncoder[topRight]+3)
+	if(lockArmPosition > nMotorEncoder[topRight]+10)
 	{
 		additionPower += 2; //Increment by 2
 	}
@@ -164,11 +164,10 @@ void pincherOpenClose()
 	int zeroRightPot = 399; //Values to set the potentiometer value to zero
 	int zeroLeftPot = 310;
 
-	int positionOpenRight = 1444; //Pot value that the motors is in the open position
+	int positionOpenRight = 1444; //Potentiometer readings for each of the three positions and each arm
 	int positionOpenLeft = 1481;
 	int positionCloseRight = 2758;
 	int positionCloseLeft = 3014;
-
 	int positionFarRight = 229;
 	int positionFarLeft = 89;
 
@@ -294,6 +293,7 @@ void dumpControl()
 	else //If bottom sensor pressed
 	{
 		moveShooterDegree(1, 50);
+		additionPower = 0;
 	}
 }
 
