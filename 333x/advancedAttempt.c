@@ -171,7 +171,7 @@ void pincherOpenClose()
 
 	int pincerSpeed = 80;
 
-	int tolorance = 50;
+	int tolorance = 80;
 
 	//Open Position control
 	if(vexRT[Btn5D])
@@ -238,8 +238,8 @@ void pincherOpenClose()
 	}
 	else
 	{
-		motor[rightPincer] = 0;
-		motor[leftPincer] = 0;
+		//motor[rightPincer] = 0;
+		//motor[leftPincer] = 0;
 	}
 }
 
@@ -265,9 +265,7 @@ void dumpControl()
 	}
 	else //If bottom sensor pressed
 	{
-		moveShooter(30);
-		wait1Msec(500);
-		moveShooter(0);
+		moveShooterDegree(1, 50);
 	}
 }
 
