@@ -18,9 +18,11 @@
 //XY coordinates system control variables
 string direction = "";
 
-double posX = 0;
-double posY = 0;
-double theta = 0;
+float posX = 0;
+float posY = 0;
+float theta = PI / 2;
+float robotRadius = 0;
+
 int degreesToTicks(int degrees)
 {
 	return (int)(degrees / 0.078);//0079 degrees per tick
@@ -58,12 +60,14 @@ void driveForward(int speed)
 {
 	motor[RI] = speed;
 	motor[LE] = speed;
+	direction = "forward";
 }
 
 void driveBackward(int speed)
 {
 	motor[RI] = -speed;
 	motor[LE] = -speed;
+	direction = "backward";
 }
 
 void driveLeftward(int speed)
@@ -84,6 +88,7 @@ void turnRight(int speed)
 	motor[FR] = speed;
 	motor[LE] = speed;
 	motor[RI] = speed;
+	direction = "right";
 }
 
 void turnLeft(int speed)
@@ -92,40 +97,89 @@ void turnLeft(int speed)
 	motor[FR] = speed;
 	motor[LE] = speed;
 	motor[RI] = speed;
+	direction = "left";
 }
 
-double getDistanceTravled(short motorName)
+void stopBase()
 {
-	double wheelDiameter = 0;
-	double circumfrence = PI * wheelDiameter;
-	double axelRotation = nMotorEncoder[motorName] / 627.2; //627.2 represents the number of motor encoder ticks per rotation of axel
+	motor[BK] = 0;
+	motor[FR] = 0;
+	motor[LE] = 0;
+	motor[RI] = 0;
+	direction = "stopped";
+}
+
+float getDistanceTravled(short motorName)
+{
+	float wheelDiameter = 0;
+	float circumfrence = PI * wheelDiameter;
+	float axelRotation = nMotorEncoder[motorName] / 627.2; //627.2 represents the number of motor encoder ticks per rotation of axel
 	return circumfrence * axelRotation;
 }
+
+float getDegreeTravled(short motorName)
+{
+	return getDistanceTravled(motorName) / robotRadius;
+}
+
+void changeTheta(string directionTurned, short motor1, short motor2, short motor3, short motor4)
+{
+	float sumDegree = getDegreeTravled(motor1) + getDegreeTravled(motor2) + getDegreeTravled(motor3) + getDegreeTravled(motor4);
+	float averageDegree = sumDegree / 4;
+	if(directionTurned == "Right")
+	{
+		theta-=averageDegree;
+	}
+	else if(directionTurned == "Left")
+	{
+		theta+=averageDegree;
+	}
+
+	//Clear theta
+	if(theta > 2*PI)
+	{
+		theta = theta - 2*PI;
+	}
+}
+
+void changePosition(short motor1, short motor2)
+{
+	float sumDistance = getDistanceTravled(motor1) + getDistanceTravled(motor2);
+	float averageDistance = sumDistance/2;
+	posX += averageDistance * cos(theta);
+	posY += averageDistance * sin(theta);
+}
+
 
 task coordinate()
 {
 	while(true)
 	{
-		if(direction == "forward")
+		if(direction == "forward" || direction == "backward")
 		{
-
-		}
-		else if(direction == "backward")
-		{
+			changePosition(RI, LE);
 		}
 		else if(direction == "left")
 		{
+			string directionTurn = "Left";
+			changeTheta(directionTurn, LE, RI, BK, FR);
 		}
 		else if(direction == "right")
 		{
+			string directionTurn = "Right";
+			changeTheta(directionTurn, LE, RI, BK, FR);
 		}
-		else if(direction == "turnLeft")
-		{
-		}
-		else if(direction == "turnRight")
-		{
-		}
+		wait10Msec(2); //Information can only be transfered every 20 ms
 	}
+}
+
+void turnRightDegree(int targetTheta, int speed)
+{
+	while(theta < targetTheta)
+	{
+		turnRight(speed);
+	}
+	stopBase();
 }
 
 task main()
