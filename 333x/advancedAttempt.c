@@ -161,15 +161,15 @@ void movePincher()
 
 void pincherOpenClose()
 {
-	int zeroRightPot = 399; //Values to set the potentiometer value to zero
-	int zeroLeftPot = 310;
+	int zeroRightPot = 180; //Values to set the potentiometer value to zero
+	int zeroLeftPot = 550;
 
-	int positionOpenRight = 1444; //Potentiometer readings for each of the three positions and each arm
-	int positionOpenLeft = 1481;
-	int positionCloseRight = 2758;
-	int positionCloseLeft = 3014;
-	int positionFarRight = 229;
-	int positionFarLeft = 89;
+	int positionOpenRight = 1700; //Potentiometer readings for each of the three positions and each arm
+	int positionOpenLeft = 1948;
+	int positionCloseRight = 3066;
+	int positionCloseLeft = 3544;
+	int positionFarRight = 280;
+	int positionFarLeft = 790;
 
 	int pincerSpeed = 80;
 
