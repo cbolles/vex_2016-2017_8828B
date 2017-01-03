@@ -162,18 +162,18 @@ void movePincher()
 void pincherOpenClose()
 {
 	int zeroRightPot = 180; //Values to set the potentiometer value to zero
-	int zeroLeftPot = 550;
+	int zeroLeftPot = 400;
 
 	int positionOpenRight = 1700; //Potentiometer readings for each of the three positions and each arm
-	int positionOpenLeft = 1948;
+	int positionOpenLeft = 1700;
 	int positionCloseRight = 3066;
-	int positionCloseLeft = 3544;
+	int positionCloseLeft = 3300;
 	int positionFarRight = 280;
 	int positionFarLeft = 790;
 
 	int pincerSpeed = 80;
 
-	int tolorance = 80;
+	int tolorance = 100;
 
 	//Open Position control
 	if(vexRT[Btn5D])
