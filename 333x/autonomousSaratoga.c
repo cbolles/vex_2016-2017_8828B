@@ -28,12 +28,17 @@ float posX = 0;
 float posY = 0;
 float theta = PI / 2;
 
+//Variables to control arm
+int additionalPower = 0;
+int lockArmPosition = 0;
+bool lockArm = false;
+
 /*
-	<summary>
-	Takes in a degree value and returns the required ticks to move the
-	robot arm that given degrees
-	</summary>
-	<param id=degrees> Degree value in degrees not radians</param>
+<summary>
+Takes in a degree value and returns the required ticks to move the
+robot arm that given degrees
+</summary>
+<param id=degrees> Degree value in degrees not radians</param>
 */
 int degreesToTicks(int degrees)
 {
@@ -41,10 +46,10 @@ int degreesToTicks(int degrees)
 }
 
 /*
-	<summary>
-	Moves all of the arm motors at one PWM value
-	</summary>
-	<param id=speed> PWM value, positive and negative matter </param>
+<summary>
+Moves all of the arm motors at one PWM value
+</summary>
+<param id=speed> PWM value, positive and negative matter </param>
 */
 void moveArm(int speed)
 {
@@ -55,13 +60,13 @@ void moveArm(int speed)
 }
 
 /*
-	<summary>
-	Moves the robot arm based off of a given degree and speed
-	</summary>
-	<param id=degrees>
-	Value in degrees, represents a value that the arm moves, not
-	a location the arm move to</param>
-	<param id = speed> PWM value, positive values only!</param>
+<summary>
+Moves the robot arm based off of a given degree and speed
+</summary>
+<param id=degrees>
+Value in degrees, represents a value that the arm moves, not
+a location the arm move to</param>
+<param id = speed> PWM value, positive values only!</param>
 */
 void moveArmDegree(float degrees, int speed)
 {
@@ -81,63 +86,65 @@ void moveArmDegree(float degrees, int speed)
 		}
 	}
 	moveArm(0);
+	lockArmPosition = nMotorEncoder[topRight];
+	additionalPower = 0;
 }
 
 /*
-	<summary>
-	Has the motors move at a given PWM speed forward only
-	</summary>
-	<param id=speed> PWM value, only positive!!</param>
+<summary>
+Has the motors move at a given PWM speed forward only
+</summary>
+<param id=speed> PWM value, only positive!!</param>
 */
 void driveForward(int speed)
 {
 	motor[RI] = speed;
-	motor[LE] = speed;
+	motor[LE] = -speed;
 	direction = "forward";
 }
 
 /*
-	<summary>
-	Has the motors move at a given PWM speed backwards only
-	</summary>
-	<param id=speed> PWM speed, positive only!</param>
+<summary>
+Has the motors move at a given PWM speed backwards only
+</summary>
+<param id=speed> PWM speed, positive only!</param>
 */
 void driveBackward(int speed)
 {
 	motor[RI] = -speed;
-	motor[LE] = -speed;
+	motor[LE] = speed;
 	direction = "backward";
 }
 
 /*
-	<summary>
-	Moves the robot left sideways(not turning)
-	</summary>
-	<param id = speed> PWM value, positive only!</param>
+<summary>
+Moves the robot left sideways(not turning)
+</summary>
+<param id = speed> PWM value, positive only!</param>
 */
 void driveLeftward(int speed)
 {
-	motor[BK] = speed;
+	motor[BK] = -speed;
 	motor[FR] = speed;
 }
 
 /*
-	<summary>
-	Moves the robot right sideways(not turning)
-	</summary>
-	<param id = speed> PWM value, positive only!</param>
+<summary>
+Moves the robot right sideways(not turning)
+</summary>
+<param id = speed> PWM value, positive only!</param>
 */
 void driveRightward(int speed)
 {
-	motor[BK] = -speed;
+	motor[BK] = speed;
 	motor[FR] = -speed;
 }
 
 /*
-	<summary>
-	Spins the robot right
-	</summary>
-	<param id = speed> PWM value, positive only!</param>
+<summary>
+Spins the robot right
+</summary>
+<param id = speed> PWM value, positive only!</param>
 */
 void turnRight(int speed)
 {
@@ -149,24 +156,24 @@ void turnRight(int speed)
 }
 
 /*
-	<summary>
-	Spins the robot left
-	</summary>
-	<param id = speed> PWM value, positive only!</param>
+<summary>
+Spins the robot left
+</summary>
+<param id = speed> PWM value, positive only!</param>
 */
 void turnLeft(int speed)
 {
-	motor[BK] = speed;
-	motor[FR] = speed;
-	motor[LE] = speed;
-	motor[RI] = speed;
+	motor[BK] = -speed;
+	motor[FR] = -speed;
+	motor[LE] = -speed;
+	motor[RI] = -speed;
 	direction = "left";
 }
 
 /*
-	<summary>
-	Stops all motors on the base
-	</summary>
+<summary>
+Stops all motors on the base
+</summary>
 */
 void stopBase()
 {
@@ -178,28 +185,28 @@ void stopBase()
 }
 
 /*
-	<summary>
-	Calculates the distance one wheel has travled since last reading
-	</summary>
-	<param id=motorName> Name of motor that you want the distance travled of</param>
-	<return> the linear distance the robot has moved </return>
+<summary>
+Calculates the distance one wheel has travled since last reading
+</summary>
+<param id=motorName> Name of motor that you want the distance travled of</param>
+<return> the linear distance the robot has moved </return>
 */
 float getDistanceTravled(short motorName)
 {
 	float wheelDiameter = 4;
 	float circumfrence = PI * wheelDiameter;
-	float axelRotation = nMotorEncoder[motorName] / 627.2; //627.2 represents the number of motor encoder ticks per rotation of axel
+	float axelRotation = abs(nMotorEncoder[motorName]) / 627.2; //627.2 represents the number of motor encoder ticks per rotation of axel
 	nMotorEncoder[motorName] = 0;
 	return circumfrence * axelRotation;
 }
 
 /*
-	<summary>
-	Uses the getDistanceTravled to convert the linear distance of a wheel into degrees the robot
-	has turned
-	</summary>
-	<param id = motorName> Name of motor that you want to get the angle of rotation from</param>
-	<return> Returns the angle the wheel has turned through</return>
+<summary>
+Uses the getDistanceTravled to convert the linear distance of a wheel into degrees the robot
+has turned
+</summary>
+<param id = motorName> Name of motor that you want to get the angle of rotation from</param>
+<return> Returns the angle the wheel has turned through</return>
 */
 float getDegreeTravled(short motorName)
 {
@@ -208,11 +215,11 @@ float getDegreeTravled(short motorName)
 }
 
 /*
-	<summary>
-	Determines current angle the robot is pointed in after motion
-	</summary>
-	<param id=directionTurned>Either "Right" or "Left" used to proporly change theta</param>
-	<param "motors">All the motors to get angle from</param>
+<summary>
+Determines current angle the robot is pointed in after motion
+</summary>
+<param id=directionTurned>Either "Right" or "Left" used to proporly change theta</param>
+<param "motors">All the motors to get angle from</param>
 */
 void changeTheta(string directionTurned, short motor1, short motor2, short motor3, short motor4)
 {
@@ -239,31 +246,43 @@ void changeTheta(string directionTurned, short motor1, short motor2, short motor
 }
 
 /*
-	<summary>
-	Determes and adjusts the x y coordinate of the robot
-	</summary>
-	<param id = motors>Since a linear change is a two motor act, two motors are given as params</param>
+<summary>
+Determes and adjusts the x y coordinate of the robot
+</summary>
+<param id = motors>Since a linear change is a two motor act, two motors are given as params</param>
 */
-void changePosition(short motor1, short motor2)
+void changePosition(string direction, short motor1, short motor2)
 {
 	float sumDistance = getDistanceTravled(motor1) + getDistanceTravled(motor2);
 	float averageDistance = sumDistance/2;
-	posX += averageDistance * cos(theta);
-	posY += averageDistance * sin(theta);
+	if(direction == "forward")
+	{
+		posX += averageDistance * cos(theta);
+		posY += averageDistance * sin(theta);
+	}
+	else if(direction == "backward")
+	{
+		posX -= averageDistance * cos(theta);
+		posY -= averageDistance * sin(theta);
+	}
 }
 
 /*
-	<summary>
-	Keeps track of the x,y,and theta of the robot as each commmand is given
-	</summary>
+<summary>
+Keeps track of the x,y,and theta of the robot as each commmand is given
+</summary>
 */
 task coordinate()
 {
 	while(true)
 	{
-		if(direction == "forward" || direction == "backward")
+		if(direction == "forward")
 		{
-			changePosition(RI, LE);
+			changePosition(direction, RI, LE);
+		}
+		else if(direction == "backward")
+		{
+			changePosition(direction, RI, LE);
 		}
 		else if(direction == "left")
 		{
@@ -275,20 +294,45 @@ task coordinate()
 			string directionTurn = "Right";
 			changeTheta(directionTurn, LE, RI, BK, FR);
 		}
+
+		if(lockArm == true)
+		{
+			if(lockArmPosition > nMotorEncoder[topRight]+10)
+			{
+				additionalPower += 2; //Increment by 2
+			}
+			else if(lockArmPosition < nMotorEncoder[topRight] -10)
+			{
+				additionalPower -= 1;
+				if(additionalPower < 0)
+				{
+					additionalPower = 0;
+				}
+			}
+			else
+			{
+				additionalPower = 0;
+			}
+			moveArm(additionalPower); //Zero if locked it on its own
+		}
+		else
+		{
+			moveArm(0);
+		}
 		wait10Msec(2); //Information can only be transfered every 20 ms
 	}
 }
 
 /*
-	<summary>
-	Turns the robot a specific angle to the right
-	</summary>
-	<param id = targetTheta>Angle the robot should turn to IN RADIANS</param>
-	<param id = speed> PWM value, positive only!</param>
+<summary>
+Turns the robot a specific angle to the right
+</summary>
+<param id = targetTheta>Angle the robot should turn to IN RADIANS</param>
+<param id = speed> PWM value, positive only!</param>
 */
 void turnRightDegree(int targetTheta, int speed)
 {
-	while(theta < targetTheta)
+	while(theta > targetTheta)
 	{
 		turnRight(speed);
 	}
@@ -296,15 +340,15 @@ void turnRightDegree(int targetTheta, int speed)
 }
 
 /*
-	<summary>
-	Turns the robot a specific angle to the left
-	</summary>
-	<param id = targetTheta>Angle the robot should turn to IN RADIANS</param>
-	<param id = speed> PWM value, positive only!</param>
+<summary>
+Turns the robot a specific angle to the left
+</summary>
+<param id = targetTheta>Angle the robot should turn to IN RADIANS</param>
+<param id = speed> PWM value, positive only!</param>
 */
 void turnLeftDegree(int targetTheta, int speed)
 {
-	while(theta > targetTheta)
+	while(theta < targetTheta)
 	{
 		turnLeft(speed);
 	}
@@ -312,49 +356,55 @@ void turnLeftDegree(int targetTheta, int speed)
 }
 
 /*
-	<summary>
-	Moves the robot a specific number of inches forward
-	</summary>
-	<param id= targetDistance> Distance the robot will travle in inches</param>
-	<param id= speed> PWM value, positive only!</param>
+<summary>
+Moves the robot a specific number of inches forward
+</summary>
+<param id= targetDistance> Distance the robot will travle in inches</param>
+<param id= speed> PWM value, positive only!</param>
 */
 void driveForwardInches(int targetDistance, int speed)
 {
-	int distance = 0;
+	float startPositionX = posX;
+	float startPositionY = posY;
+	float distance = 0;
 	while(distance < targetDistance)
 	{
 		driveForward(speed);
-		distance += (getDistanceTravled(RI) + getDistanceTravled(LE)) / 2;
+		distance = sqrt(pow(posX - startPositionX, 2) + pow(posY - startPositionY, 2)
+		wait10Msec(2);
 	}
 	stopBase();
 }
 
 
 /*
-	<summary>
-	Moves the robot a specific number of inches backwards
-	</summary>
-	<param id= targetDistance> Distance the robot will travle in inches</param>
-	<param id= speed> PWM value, positive only!</param>
+<summary>
+Moves the robot a specific number of inches backwards
+</summary>
+<param id= targetDistance> Distance the robot will travle in inches</param>
+<param id= speed> PWM value, positive only!</param>
 */
 void driveBackwardInches(int targetDistance, int speed)
 {
-	int distance = 0;
+	float startPositionX = posX;
+	float startPositionY = posY;
+	float distance = 0;
 	while(distance < targetDistance)
 	{
 		driveBackward(speed);
-		distance += (getDistanceTravled(RI) + getDistanceTRavled(LE)) / 2;
+		distance = sqrt(pow(posX - startPositionX, 2) + pow(posY - startPositionY, 2)
+		wait10Msec(2);
 	}
 	stopBase();
 }
 
 /*
-	<summary>
-	Tells the robot to move to a specific point on the field
-	</summary>
-	<param id=x> Target x position</param>
-	<param id=y> Target y position</param>
-	<param id=speed> PWM value, positive only!</param>
+<summary>
+Tells the robot to move to a specific point on the field
+</summary>
+<param id=x> Target x position</param>
+<param id=y> Target y position</param>
+<param id=speed> PWM value, positive only!</param>
 */
 void goToPoint(float x, float y, int speed)
 {
@@ -377,7 +427,22 @@ void goToPoint(float x, float y, int speed)
 
 task main()
 {
+	nMotorEncoder[BK] = 0;
+	nMotorEncoder[FR] = 0;
+	nMotorEncoder[LE] = 0;
+	nMotorEncoder[RI] = 0;
+	nMotorEncoder[topRight] = 0;
+	theta = PI/2;
+	posX = 0;
+	posY = 0;
+	startTask(coordinate);
 	//Likly about 3 different autos will be programmed here
-
+	//driveBackwardInches(15, 30);
+	//turnRightDegree(1.309, 20);
+	//driveForwardInches(7, 40);
+	moveArmDegree(35, 50);
+	lockArm = true;
+	wait1Msec(5000);
+	stopAllTasks();
 
 }
