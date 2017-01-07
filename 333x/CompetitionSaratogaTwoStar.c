@@ -525,7 +525,7 @@ task autonomous()
 	driveBackwardInches(35, 127);
 
 	//Dump Star
-	moveArmDegree(120, 90);
+	moveArmDegree(60, 90);
 
 	//Drop star on wall
 	motor[rightPincer] = -75;
@@ -747,6 +747,10 @@ void lockArmUser()
 	{
 		additionalPower += 2; //Increment by 2
 	}
+	if(lockArmPosition > nMotorEncoder[topRight] + 100)
+	{
+		lockArmPosition = nMotorEncoder[topRight];
+	}
 	moveArm(additionalPower); //Zero if locked it on its own
 }
 //Basic up down moving, when not suppose to move, adds power to make sure it wont move
@@ -773,6 +777,7 @@ void dumpControl()
 	{
 		moveArmDegree(1, 50);
 		additionalPower = 0;
+		lockArmPosition =nMotorEncoder[topRight];
 	}
 }
 
