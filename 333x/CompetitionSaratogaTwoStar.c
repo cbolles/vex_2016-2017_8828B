@@ -71,6 +71,7 @@ float theta = PI / 2;
 int additionalPower = 0;
 int lockArmPosition = 0;
 bool lockArm = false;
+int lockArmPositionUser = 0;
 
 /*
 <summary>
@@ -96,6 +97,8 @@ void moveArm(int speed)
 	motor[bottomRight] = speed;
 	motor[topLeft] = speed;
 	motor[bottomLeft] = speed;
+	lockArmPosition = nMotorEncoder[topRight];
+	lockArmPositionUser = nMotorEncoder[topRight];
 }
 
 /*
@@ -126,6 +129,7 @@ void moveArmDegree(float degrees, int speed)
 	}
 	moveArm(0);
 	lockArmPosition = nMotorEncoder[topRight];
+	lockArmPositionUser = nMotorEncoder[topRight];
 	additionalPower = 0;
 }
 
@@ -535,7 +539,7 @@ task autonomous()
 	moveArmDegree(-100, 75);
 
 	wait1Msec(5000);
-	stopAllTasks();
+	stopTask(coordinate);
 }
 
 //Gets Joystick Values with dead zone
@@ -743,13 +747,13 @@ void pincherOpenClose()
 }
 void lockArmUser()
 {
-	if(lockArmPosition > nMotorEncoder[topRight]+3)
+	if(lockArmPositionUser > nMotorEncoder[topRight]+3)
 	{
 		additionalPower += 2; //Increment by 2
 	}
 	if(lockArmPosition > nMotorEncoder[topRight] + 100)
 	{
-		lockArmPosition = nMotorEncoder[topRight];
+		lockArmPositionUser = nMotorEncoder[topRight];
 	}
 	moveArm(additionalPower); //Zero if locked it on its own
 }
@@ -777,17 +781,18 @@ void dumpControl()
 	{
 		moveArmDegree(1, 50);
 		additionalPower = 0;
-		lockArmPosition =nMotorEncoder[topRight];
+		lockArmPositionUser =nMotorEncoder[topRight];
 	}
 }
 
 task usercontrol()
 {
 	nMotorEncoder[topRight] = 0;
-	lockArmPosition = nMotorEncoder[topRight];
+	lockArmPositionUser = nMotorEncoder[topRight];
 	additionalPower = 0;
 	stopBase();
 	moveArm(0);
+	stopTask(coordinate);
 	while(true)
 	{
 		driveControl();
