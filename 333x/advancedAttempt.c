@@ -282,12 +282,12 @@ void dumpControl()
 		if(vexRT[Btn6U])
 		{
 			additionPower = 0;
-			moveShooter(75);
+			moveShooter(127);
 		}
 		else if(vexRT[Btn6D])
 		{
 			additionPower = 0;
-			moveShooter(-75);
+			moveShooter(-127);
 		}
 		else
 		{
