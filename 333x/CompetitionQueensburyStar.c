@@ -49,18 +49,18 @@ int lockArmPositionUser = 0;
 
 void pre_auton()
 {
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks
-  // running between Autonomous and Driver controlled modes. You will need to
-  // manage all user created tasks if set to false.
-  bStopTasksBetweenModes = true;
+	// Set bStopTasksBetweenModes to false if you want to keep user created tasks
+	// running between Autonomous and Driver controlled modes. You will need to
+	// manage all user created tasks if set to false.
+	bStopTasksBetweenModes = true;
 
 	// Set bDisplayCompetitionStatusOnLcd to false if you don't want the LCD
 	// used by the competition include file, for example, you might want
 	// to display your team name on the LCD in this function.
 	// bDisplayCompetitionStatusOnLcd = false;
 
-  // All activities that occur before the competition starts
-  // Example: clearing encoders, setting servo positions, ...
+	// All activities that occur before the competition starts
+	// Example: clearing encoders, setting servo positions, ...
 }
 
 void moveArm(int speed)
@@ -148,11 +148,11 @@ Has the motors move at a given PWM speed forward only
 */
 void driveForward(int speed)
 {
-	motor[backRight] = speed;
-	motor[backLeft] = speed;
+	motor[backRight] = -speed;
+	motor[backLeft] = -speed;
 
-	motor[frontRight] = speed;
-	motor[frontLeft] = speed;
+	motor[frontRight] = -speed;
+	motor[frontLeft] = -speed;
 }
 
 /*
@@ -163,11 +163,11 @@ Has the motors move at a given PWM speed backwards only
 */
 void driveBackward(int speed)
 {
-	motor[backRight] = -speed;
-	motor[backLeft] = -speed;
+	motor[backRight] = speed;
+	motor[backLeft] = speed;
 
-	motor[frontRight] = -speed;
-	motor[frontLeft] = -speed;
+	motor[frontRight] = speed;
+	motor[frontLeft] = speed;
 }
 
 /*
@@ -178,11 +178,11 @@ Moves the robot left sideways(not turning)
 */
 void driveLeftward(int speed)
 {
-	motor[frontRight] = -speed;
-	motor[frontLeft] = -speed;
+	motor[frontRight] = speed;
+	motor[frontLeft] = speed;
 
-	motor[backRight] = speed;
-	motor[backLeft] = speed;
+	motor[backRight] = -speed;
+	motor[backLeft] = -speed;
 }
 
 /*
@@ -193,11 +193,11 @@ Moves the robot right sideways(not turning)
 */
 void driveRightward(int speed)
 {
-	motor[frontRight] = speed;
-	motor[frontLeft] = speed;
+	motor[frontRight] = -speed;
+	motor[frontLeft] = -speed;
 
-	motor[backRight] = -speed;
-	motor[backLeft] = -speed;
+	motor[backRight] = speed;
+	motor[backLeft] = speed;
 }
 
 /*
@@ -208,11 +208,11 @@ Spins the robot right
 */
 void turnRight(int speed)
 {
-	motor[frontRight] = -speed;
-	motor[frontLeft] = speed;
+	motor[frontRight] = speed;
+	motor[frontLeft] = -speed;
 
-	motor[backRight] = -speed;
-	motor[backLeft] = speed;
+	motor[backRight] = speed;
+	motor[backLeft] = -speed;
 }
 
 /*
@@ -223,11 +223,11 @@ Spins the robot left
 */
 void turnLeft(int speed)
 {
-	motor[frontRight] = speed;
-	motor[frontLeft] = -speed;
+	motor[frontRight] = -speed;
+	motor[frontLeft] = speed;
 
-	motor[backRight] = speed;
-	motor[backLeft] = -speed;
+	motor[backRight] = -speed;
+	motor[backLeft] = speed;
 }
 
 /*
@@ -250,9 +250,9 @@ Keeps track of the x,y,and theta of the robot as each commmand is given
 </summary>
 */
 /*
-	<summary>
-	This task keeps the x,y,and theta for the robot as it moves keeping making control of robot easier
-	</summary>
+<summary>
+This task keeps the x,y,and theta for the robot as it moves keeping making control of robot easier
+</summary>
 */
 task odometry()
 {
@@ -306,6 +306,19 @@ task odometry()
 		X_pos += inches * sin(theta);
 
 		traveled += sqrt(pow(X_pos-x1,2) + pow(Y_pos-y1,2));//distance formula
+
+		if(lockArm)
+		{
+			if(lockArmPositionUser > nMotorEncoder[topRight]+3)
+			{
+				additionalPower += 2; //Increment by 2
+			}
+			if(lockArmPosition > nMotorEncoder[topRight] + 100)
+			{
+				lockArmPositionUser = nMotorEncoder[topRight];
+			}
+			moveArm(additionalPower); //Zero if locked it on its own
+		}
 
 		wait1Msec(50);//allow for new values to come in
 	}
@@ -449,37 +462,45 @@ void closePincer(int speed)
 
 }
 
+
 task autonomous()
 {
 	nMotorEncoder[backLeft] = 0;
 	nMotorEncoder[backRight] = 0;
 	nMotorEncoder[topRight] = 0;
+	additionalPower = 0;
 	theta = PI/2;
 	X_pos = 0;
 	Y_pos = 0;
 	startTask(odometry);
 
 	//Drop Preload
-	driveBackwardInches(10, 127);
+	driveBackwardInches(7, 127);
 	moveArmDegree(10, 60);
-	lockArm = true;
 
-	//Pick up preload
-	driveForwardInches(6, 75);
+	driveForwardInches(2, 25);
 	moveArmDegree(30, 60);
+
+	lockArm = true;
+	lockArmPosition = nMotorEncoder[topRight];
+	additionalPower = 0;
 
 	//Drive up to wall
 	driveBackwardInches(35, 127);
+	lockArm = false;
 
 	//Dump Star
-	moveArmDegree(120, 90);
+	moveArmDegree(110, 90);
 
 	//Drop star on wall
+	motor[leftPincer] = -75;
 	motor[rightPincer] = -75;
-	wait1Msec(750);
+	wait1Msec(1000);
+	motor[leftPincer] = 0;
 	motor[rightPincer] = 0;
 
 	moveArmDegree(-100, 75);
+
 
 	wait1Msec(5000);
 	stopTask(odometry);
@@ -636,7 +657,7 @@ void pincherOpenClose()
 	}
 	else if(vexRT[Btn8D])//Getting into tight corners
 	{
-				//right pincer
+		//right pincer
 		if(SensorValue[rightPot]-zeroRightPot > positionFarRight+tolorance)
 		{
 			motor[rightPincer] = pincerSpeed;
