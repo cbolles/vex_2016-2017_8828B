@@ -170,9 +170,14 @@ void driveBackward(int targetDistance, int speed)
 	stopBase();
 }
 
+bool inRange(float value, float target, float tolerance)
+{
+	return abs(value-target) <= tolerance;
+}
+
 void turnRight(float targetTheta, int speed)
 {
-	while(theta > targetTheta+0.09)
+	while(!inRange(theta, targetTheta, 0.09))
 	{
 		turnRight(speed);
 	}
@@ -181,7 +186,7 @@ void turnRight(float targetTheta, int speed)
 
 void turnLeft(float targetTheta, int speed)
 {
-	while(theta < targetTheta-0.09)
+	while(!inRange(theta, targetTheta, 0.09))
 	{
 		turnLeft(speed);
 	}
@@ -304,35 +309,66 @@ void basicAuto()
 {
 	//Drop Preload
 	driveBackward(7, 127);
-	moveArmDegree(10, 60);
+	moveArmDegree(10, 90);
 
 	moveArmDegree(30, 60);
+
+	turnLeft(3*PI/2+.17, 50);
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
 	//Drive up to wall
-	driveBackward(35, 127);
+	driveBackward(30, 127);
 	lockArm = false;
 
 	//Dump Star
-	moveArmDegree(110, 90);
+	moveArmDegree(95, 90);
 
 	//Drop star on wall
-	motor[leftPincer] = 75;
-	motor[rightPincer] = 75;
-	wait1Msec(1500);
+	motor[leftPincer] = 127;
+	motor[rightPincer] = 127;
+	wait1Msec(1000);
 	motor[leftPincer] = 0;
 	motor[rightPincer] = 0;
 
 	moveArmDegree(-100, 75);
 }
+
+void backStars()
+{
+	basicAuto();
+	motor[leftPincer] = -127;
+	motor[rightPincer] = -127;
+	wait1Msec(750);
+	motor[leftPincer] = 0;
+	motor[rightPincer] = 0;
+
+	driveForward(45, 127);
+	theta = 3*PI/2;
+	turnLeft(5.7, 127);
+	driveForward(35, 127);
+	moveArmDegree(50, 100);
+	theta = 5.85;
+
+	lockArm = true;
+	lockArmPosition = nMotorEncoder[topRight];
+	additionalPower = 0;
+
+	driveBackward(30, 127);
+	turnRight(3*PI/2-.17, 75);
+	driveBackward(40, 127);
+	moveArmDegree(90, 127);
+	lockArm = false;
+}
 /*------------------------------------------------------------------------------------*/
 
 task main()
 {
+	clearTimer(T1);
 	startTask(odometry);
 	setToDefault();
-	basicAuto();
+	backStars();
+	writeDebugStreamLine("%d:",time1(T1));
 }
