@@ -4,6 +4,8 @@
 #pragma config(Sensor, in3,    autoControl,    sensorNone)
 #pragma config(Sensor, in4,    accelRight,     sensorAccelerometer)
 #pragma config(Sensor, in5,    accelLeft,      sensorAccelerometer)
+#pragma config(Sensor, in6,    accelRightZ,    sensorAccelerometer)
+#pragma config(Sensor, in7,    accelLeftZ,     sensorAccelerometer)
 #pragma config(Sensor, dgtl1,  autoSensor,     sensorTouch)
 #pragma config(Sensor, dgtl2,  bottomLimit,    sensorNone)
 #pragma config(Sensor, dgtl3,  autoSensor,     sensorNone)
@@ -22,6 +24,7 @@ float WHEEL_BASE = 30;
 float LEFT_CLICKS_PER_INCH = 27;
 float RIGHT_CLICKS_PER_INCH = 27;
 float traveled = 0;								//distanced traveled from set point
+float timeBetweenSampling = 60; //How many millisecs before the position is upgraded
 
 /*--------------------------------------------------------------------------------*/
 
@@ -31,19 +34,18 @@ float thetaOdo = PI/2;                    /* bot heading */
 float xOdo=0;                    /* bot X position in inches */
 float yOdo=0;                    /* bot Y position in inches */
 
+int lsamp = 0;
+int rsamp = 0;
+int L_ticks = 0;
+int R_ticks = 0;
+int last_left = 0;
+int last_right = 0;
+float x1,y1;
+float left_inches, right_inches, inches;
+
 //Odomery
 void odometry()
 {
-	nMotorEncoder[backRight] = 0;
-	nMotorEncoder[backLeft] = 0;
-	int lsamp = 0;
-	int rsamp = 0;
-	int L_ticks = 0;
-	int R_ticks = 0;
-	int last_left = 0;
-	int last_right = 0;
-	float x1,y1;
-	float left_inches, right_inches, inches;
 	lsamp = nMotorEncoder[backRight];
 	rsamp = nMotorEncoder[backLeft];
 
@@ -89,19 +91,49 @@ void odometry()
 float thetaAcc = PI/2;                    /* bot heading */
 float xAcc=0;                    /* bot X position in inches */
 float yAcc=0;                    /* bot Y position in inches */
-float initalLeftAccelVal = 0;
+float initialLeftAccelVal = 0;
 float initialRightAccelVal = 0;
 float calibrateAccelLeft = 0;
 float calibrateAccelRight = 0;
 
+float pastVelocityLeft;
+float pastVelocityRight;
+
+//Support functions
+float calculateDistanceTraveled(float time, float acceleration, float pastVelocity)
+{
+	return 0.5*acceleration*pow(time,2) + pastVelocity*time;
+}
+
 //Accelerometer task control
 void accelerometerPosition()
 {
-	float instaAccelRight = SensorValue[accelRight];
-	float instaAccelLeft = SensorValue[accelLeft];
-	float instaVelocityRight;
-	float instaVelocityLeft;
-	wait1Msec(50);//Allow for new values to come in before updating
+	float instaAccelRight = (SensorValue[accelRight]-initialRightAccelVal)*calibrateAccelRight;
+	float instaAccelLeft = (SensorValue[accelLeft]-initialLeftAccelVal)*calibrateAccelLeft;
+
+	float distanceRight = calculateDistanceTraveled((timeBetweenSampling/1000), instaAccelRight, pastVelocityRight);
+	float distanceLeft = calculateDistanceTraveled((timeBetweenSampling/1000), instaAccelLeft, pastVelocityLeft,);
+
+	pastVelocityRight = instaAccelRight * (timeBetweenSampling / 1000);
+	pastVelocityLeft = instaAccelLeft * (timeBetweenSampling / 1000);
+
+		//change the angle of the robot
+	thetaAcc += (distanceLeft - distanceRight) / WHEEL_BASE;
+
+	//Keeps the theta value within 0 and 2*PI radians
+	if(thetaAcc >= 2*PI)
+	{
+		thetaAcc = thetaAcc - 2 * PI;
+	}
+
+	else if (thetaAcc < 0)
+	{
+		thetaAcc =  thetaAcc + 2 * PI;
+	}
+	/* now calculate and accumulate our position in inches */
+	float totalDistance = (distanceLeft + distanceRight) / 2.0;
+	yAcc += totalDistance * sin(thetaAcc);
+	xAcc += totalDistance * cos(thetaAcc);
 }
 /*-----------------------------------------------------------------------------------------*/
 
@@ -134,10 +166,9 @@ task kalmanFilter()
 		odometry();
 		accelerometerPosition();
 		/*
-			In here I will take the values from the two tasks to come up with one final x,y value
+		In here I will take the values from the two tasks to come up with one final x,y value
 		*/
-
-		wait1Msec(60); //Allow values to repopulate
+		wait1Msec(timeBetweenSampling); //Allow values to repopulate
 	}
 }
 /*-----------------------------------------------------------------------------------------*/
@@ -159,10 +190,13 @@ void setDefault()
 	xAcc = 0;
 	yAcc = 0;
 	thetaAcc = PI/2;
-	initalLeftAccelVal = SensorValue[accelLeft];
+	initialLeftAccelVal = SensorValue[accelLeft];
 	initialRightAccelVal = SensorValue[accelRight];
-	calibrateAccelLeft = (SensorValue[accelLeftZ] - intialLeftAccelVal) / 9.801; //Creates conversion factor from vex acceleromter values to m/s^2
-	calibrateAccelRight = (SensorValue[accelRightZ] - intialRightAccelVal) / 9.801; //Creates conversion factor from vex acceleromter values to m/s^2
+	float accelerationDueToGravity = 385.9;
+	calibrateAccelLeft = accelerationDueToGravity / (SensorValue[accelLeftZ] - initialLeftAccelVal); //Find out how many "units" represent a single g
+	calibrateAccelRight = accelerationDueToGravity / (SensorValue[accelRightZ] - initialRightAccelVal);
+	pastVelocityRight = 0;
+	pastVelocityLeft = 0;
 	//Reset all Kalman values
 	x_pos = 0;
 	y_pos = 0;
