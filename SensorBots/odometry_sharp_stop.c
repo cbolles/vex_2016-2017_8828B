@@ -92,15 +92,21 @@ void stopBase()
 	motor[backLeft] = 0;
 }
 
-void driveForward(int targetDistance, int speed)
+//Using y=mx+b to calculate how to stop the robot
+void driveForward(int targetDistance, int maxSpeed)
 {
+	//Linear Function
+	float slope = -maxSpeed/targetDistance;
+
 	float startPositionX = X_pos;
 	float startPositionY = Y_pos;
 	float distance = 0;
+	int currentSpeed = maxSpeed;
 	while(distance < targetDistance)
 	{
-		driveForward(speed);
+		driveForward(currentSpeed);
 		distance = sqrt(pow(X_pos - startPositionX, 2) + pow(Y_pos - startPositionY, 2));
+		currentSpeed = slope*distance+maxSpeed;
 		wait10Msec(2);
 	}
 	stopBase();
@@ -140,7 +146,6 @@ void turnLeft(float targetTheta, int speed)
 	{
 		turnLeft(speed);
 	}
-	stopBase();
 }
 
 void goToPoint(float x, float y, int speed)
@@ -236,6 +241,6 @@ task main()
 {
 	setDefault();
 	startTask(odometry);
-	driveForward(5, 127);
+	driveForward(15, 127);
 
 }
