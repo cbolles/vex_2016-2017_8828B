@@ -92,11 +92,11 @@ void stopBase()
 	motor[backLeft] = 0;
 }
 
-//Using y=mx+b to calculate how to stop the robot
+//Using y=ax^2+bx+c to calculate speed decrease
 void driveForward(int targetDistance, int maxSpeed)
 {
-	//Linear Function
-	float slope = -maxSpeed/targetDistance;
+	//Quadratic function
+	float a = -maxSpeed/pow(targetDistance,2);
 
 	float startPositionX = X_pos;
 	float startPositionY = Y_pos;
@@ -106,7 +106,7 @@ void driveForward(int targetDistance, int maxSpeed)
 	{
 		driveForward(currentSpeed);
 		distance = sqrt(pow(X_pos - startPositionX, 2) + pow(Y_pos - startPositionY, 2));
-		currentSpeed = slope*distance+maxSpeed;
+		currentSpeed = a*pow(distance,2)+maxSpeed;
 		wait10Msec(2);
 	}
 	stopBase();
