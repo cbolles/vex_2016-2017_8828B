@@ -20,10 +20,10 @@
 #pragma config(Motor,  port10,          leftPincer,    tmotorVex393_HBridge, openLoop)
 
 /*--------------------------------Odometry Variables--------------------------------*/
-float WHEEL_BASE = 30;
-float LEFT_CLICKS_PER_INCH = 27;
-float RIGHT_CLICKS_PER_INCH = 27;
-float theta = PI/2;                    /* bot heading */
+float WHEEL_BASE = 76;
+float LEFT_CLICKS_PER_CM = 70;
+float RIGHT_CLICKS_PER_CM = 70;
+float theta = 270;                    /* bot heading */
 float X_pos=0;                    /* bot X position in inches */
 float Y_pos=0;                    /* bot Y position in inches */
 float traveled = 0;								//distanced traveled from set point
@@ -98,8 +98,6 @@ void driveBackward(int speed)
 	motor[frontLeft] = -speed;
 }
 
-
-
 void driveLeftward(int speed)
 {
 	motor[frontRight] = speed;
@@ -171,7 +169,8 @@ bool inRange(float value, float target, float tolerance)
 
 void turnRight(float targetTheta, int speed)
 {
-	while(!inRange(theta, targetTheta, 0.09))
+	float targetThetaRadians = degreesToRadians(targetTheta);
+	while(!inRange(theta, targetThetaRadians, 10))
 	{
 		turnRight(speed);
 	}
@@ -180,7 +179,8 @@ void turnRight(float targetTheta, int speed)
 
 void turnLeft(float targetTheta, int speed)
 {
-	while(!inRange(theta, targetTheta, 0.09))
+	float targetThetaRadians = degreesToRadians(targetTheta);
+	while(!inRange(theta, targetThetaRadians, 10))
 	{
 		turnLeft(speed);
 	}
@@ -191,18 +191,18 @@ void goToPoint(float x, float y, int speed)
 {
 	float xDistance = x - X_pos+.01;
 	float yDistance = y - Y_pos;
-	float angleToPoint = atan2(yDistance,xDistance);
+	float angleToPoint = radiansToDegrees(atan2(yDistance,xDistance));
 	float distanceToPoint = sqrt(pow(X_pos - x, 2) + pow(Y_pos - y, 2));
 	if(angleToPoint < 0)
 	{
-		angleToPoint += 2*PI;
+		angleToPoint += 360;
 	}
-	writeDebugStreamLine("%f:",angleToPoint);
-	if(theta - angleToPoint > .09)
+	writeDebugStreamLine("Angle_To_Point: %f",angleToPoint);
+	if(theta - angleToPoint > 5)
 	{
 		turnRight(angleToPoint, speed);
 	}
-	else if(theta - angleToPoint < -0.09)
+	else if(theta - angleToPoint < -5)
 	{
 		turnLeft(angleToPoint, speed);
 	}
@@ -221,7 +221,7 @@ task odometry()
 	int last_left = 0;
 	int last_right = 0;
 	float x1,y1;
-	float left_inches, right_inches, inches;
+	float left_cm, right_cm, cm;
 	while (true)
 	{
 		lsamp = nMotorEncoder[backRight];
@@ -236,31 +236,31 @@ task odometry()
 		last_right = rsamp;
 
 		//Calculate the distance each wheel has travled
-		left_inches = (float)L_ticks/LEFT_CLICKS_PER_INCH;
-		right_inches = (float)R_ticks/RIGHT_CLICKS_PER_INCH;
+		left_cm = (float)L_ticks/LEFT_CLICKS_PER_CM;
+		right_cm = (float)R_ticks/RIGHT_CLICKS_PER_CM;
 
 		//calculate distance the total robot has travled
-		inches = (left_inches + right_inches) / 2.0;
+		cm = (left_cm + right_cm) / 2.0;
 
 		//change the angle of the robot
-		theta += (left_inches - right_inches) / WHEEL_BASE;
+		theta += radiansToDegrees((left_cm - right_cm) / WHEEL_BASE);
 
 		//Keeps the theta value within 0 and 2*PI radians
-		if(theta >= 2*PI)
+		if(theta >= 360)
 		{
-			theta = theta - 2 * PI;
+			theta = theta - 360;
 		}
 
 		else if (theta < 0)
 		{
-			theta =  theta + 2 * PI;
+			theta =  theta + 360;
 		}
 
 		y1 = Y_pos;
 		x1 = X_pos;
 		/* now calculate and accumulate our position in inches */
-		Y_pos += inches * sin(theta);
-		X_pos += inches * cos(theta);
+		Y_pos += cm * sin(degreesToRadians(theta));
+		X_pos += cm * cos(degreesToRadians(theta));
 
 		traveled += sqrt(pow(X_pos-x1,2) + pow(Y_pos-y1,2));//distance formula, used like a resetable sensor
 
@@ -276,7 +276,7 @@ task odometry()
 			}
 			moveArm(additionalPower); //Zero if locked it on its own
 		}
-		wait1Msec(50);//Allow for new values to come in before updating
+		wait1Msec(60);//Allow for new values to come in before updating
 	}
 }
 
@@ -287,7 +287,7 @@ void setToDefault()
 	nMotorEncoder[backRight] = 0;
 	X_pos = 0;
 	Y_pos = 0;
-	theta = 3*PI/2;
+	theta = 270;
 	additionalPower = 0;
 	traveled= 0;
 }
@@ -298,24 +298,35 @@ In here will be functions to tell which value a potentiometer is at to determine
 auto to run
 */
 /*------------------------------------------------------------------------------------*/
+void calculateStoppingDistance()
+{
+	traveled = 0;
+	clearTimer(T1);
+	driveForward(51, 127);
+	traveled = 0;
+	wait1Msec(750); //Wait for robot to completly stop
+	stoppingDistance = traveled;
+}
+/*
 
 /*---------------------------Autos----------------------------------------------------*/
 void basicAuto()
 {
 	//Drop Preload
-	driveBackward(7, 127);
+	driveBackward(18, 127);
 	moveArmDegree(10, 90);
 
 	moveArmDegree(30, 60);
 
-	turnLeft(3*PI/2+.17, 50);
+	turnLeft(280, 50);
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
+	calculateStoppingDistance();
 	//Drive up to wall
-	driveBackward(30, 127);
+	driveBackward(25, 127);
 	lockArm = false;
 
 	//Dump Star
@@ -340,30 +351,21 @@ void backStars()
 	motor[leftPincer] = 0;
 	motor[rightPincer] = 0;
 
-	driveForward(45, 127);
-	theta = 3*PI/2;
-	turnLeft(5.7, 127);
+	driveForward(114, 127);
+	theta = 270;
+	turnLeft(327, 127);
 	driveForward(35, 127);
 	moveArmDegree(50, 100);
-	theta = 5.85;
+	theta = 327;
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
-	driveBackward(30, 127);
-	turnRight(3*PI/2-.17, 75);
-	driveBackward(40, 127);
+	driveBackward(76, 127);
+	turnRight(260, 75);
+	driveBackward(102, 127);
 	moveArmDegree(90, 127);
 	lockArm = false;
-}
-
-void calculateStoppingDistance()
-{
-	traveled = 0;
-	clearTimer(T1);
-	driveForward(20, 127);
-	wait1Msec(750); //Wait for robot to completly stop
-	stoppingDistance = (traveled)/12;
 }
 /*------------------------------------------------------------------------------------*/
