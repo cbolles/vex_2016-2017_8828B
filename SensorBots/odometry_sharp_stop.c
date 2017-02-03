@@ -26,6 +26,16 @@ float X_pos=0;                    /* bot X position in inches */
 float Y_pos=0;                    /* bot Y position in inches */
 float traveled = 0;								//distanced traveled from set point
 
+//Varaiables for finding frictional force
+float finalVelocity = 0;
+float frictionForce = 0;
+float stoppingDistance = 0;
+float massOfRobot = 0.4;//Measured in slugs
+float measuredTime;
+
+//Varaibles making use of friction
+float requiredStoppingDistance = 0;
+
 
 void driveForward(int speed)
 {
@@ -95,19 +105,17 @@ void stopBase()
 //Using y=ax^2+bx+c to calculate speed decrease
 void driveForward(int targetDistance, int maxSpeed)
 {
-	//Quadratic function
-	float a = -maxSpeed/pow(targetDistance,2);
-
-	float startPositionX = X_pos;
-	float startPositionY = Y_pos;
-	float distance = 0;
-	int currentSpeed = maxSpeed;
-	while(distance < targetDistance)
+	if(frictionForce > 0)
 	{
-		driveForward(currentSpeed);
-		distance = sqrt(pow(X_pos - startPositionX, 2) + pow(Y_pos - startPositionY, 2));
-		currentSpeed = a*pow(distance,2)+maxSpeed;
-		wait10Msec(2);
+		requiredStoppingDistance = 12*((massOfRobot*pow(finalVelocity,2))/(2*frictionForce));
+	}
+	else
+	{
+		requiredStoppingDistance = 0;
+	}
+	while(traveled < targetDistance-10)
+	{
+		driveForward(maxSpeed);
 	}
 	stopBase();
 }
@@ -237,10 +245,31 @@ void setDefault()
 	nMotorEncoder[backRight] = 0;
 }
 
+void calculateFriction(float distance, int speed)
+{
+		//Calclating frictional force
+	traveled = 0;
+	clearTimer(T1);
+	driveForward(distance, speed);
+	measuredTime = time1[T1];
+	finalVelocity = (traveled/12)/(measuredTime/1000); //Calculating velocity in f/s
+	traveled = 0;
+	wait1Msec(750); //Wait for robot to completly stop
+	stoppingDistance = (traveled)/12;
+	frictionForce = (massOfRobot*pow(finalVelocity,2))/(2*stoppingDistance);
+	writeDebugStreamLine("Velocity: %f, Stopping_Distance: %f, Friction_Force: %f",finalVelocity, stoppingDistance, frictionForce);
+}
+
 task main()
 {
 	setDefault();
 	startTask(odometry);
-	driveForward(15, 127);
 
+	//Calclating frictional force
+	calculateFriction(15, 127);
+	traveled = 0;
+	driveForward(15, 127);
+	wait1Msec(2000);
+	traveled = 0;
+	driveForward(20, 127);
 }
