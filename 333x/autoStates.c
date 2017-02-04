@@ -32,11 +32,9 @@ task main()
 	clearTimer(T2);
 	setToDefault();
 	startTask(odometry);
-	writeDebugStreamLine("Degree_to_radian: %f", degreesToRadians(90));
-	writeDebugStreamLine("Radian_to_degree: %f", radiansToDegrees(-PI/2));
 	//Select
-	calculateStoppingDistance();
-	driveForward(20, 127);
+	//calculateStoppingDistance();
+	driveForward(40, 127);
 	/*
 	if(SensorValue[autoSensor])
 	{

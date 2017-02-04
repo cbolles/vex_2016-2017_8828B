@@ -27,10 +27,11 @@ float theta = 270;                    /* bot heading */
 float X_pos=0;                    /* bot X position in inches */
 float Y_pos=0;                    /* bot Y position in inches */
 float traveled = 0;								//distanced traveled from set point
+float currentVelocity = 0;
 /*----------------------------------------------------------------------------------*/
 
 /*-------------------------Advanced Calculations Variables--------------------------*/
-float stoppingDistance = 0;
+float frictionForce = 0;
 /*----------------------------------------------------------------------------------*/
 
 /*--------------------------------Arm control Variables-----------------------------*/
@@ -143,21 +144,38 @@ void stopBase()
 	motor[backLeft] = 0;
 }
 
+float calculateStoppingDistance()
+{
+	float massOfRobot = 0;
+	return (massOfRobot*pow(currentVelocity,2))/(2*frictionForce);
+}
+
 void driveForward(int targetDistance, int speed)
 {
+	traveled = 0;
+	float stoppingDistance = 0;
+	float pastVelocity = currentVelocity;
 	while(traveled < targetDistance-stoppingDistance)
 	{
+		if(currentVelocity > pastVelocity)
+		{
+			stoppingDistance = calculateStoppingDistance();
+		}
 		driveForward(speed);
 	}
 	stopBase();
 }
 
-void driveBackward(int targetDistance, int speed)
+void driveBackward(int targetDistance, int maxSpeed)
 {
+	//Linear function to slow down robot
+	float slope = -maxSpeed/targetDistance;
+	int currentSpeed = maxSpeed;
 	traveled = 0;
-	while(traveled < targetDistance-stoppingDistance)
+	while(traveled < targetDistance)
 	{
-		driveBackward(speed);
+		driveBackward(currentSpeed);
+		currentSpeed = slope*traveled+maxSpeed;
 	}
 	stopBase();
 }
@@ -263,8 +281,9 @@ task odometry()
 		Y_pos += cm * sin(degreesToRadians(theta));
 		X_pos += cm * cos(degreesToRadians(theta));
 
-		traveled += sqrt(pow(X_pos-x1,2) + pow(Y_pos-y1,2));//distance formula, used like a resetable sensor
-
+		float distanceTraveled = sqrt(pow(X_pos-x1,2) + pow(Y_pos-y1,2));
+		traveled += distanceTraveled;
+		currentVelocity = (distanceTraveled*1000)/60;
 		if(lockArm)
 		{
 			if(lockArmPositionUser > nMotorEncoder[topRight]+3)
@@ -299,14 +318,22 @@ In here will be functions to tell which value a potentiometer is at to determine
 auto to run
 */
 /*------------------------------------------------------------------------------------*/
-void calculateStoppingDistance()
+void calculateFrictionForce()
 {
 	traveled = 0;
 	clearTimer(T1);
-	driveForward(51, 127);
+	while(traveled < 51)
+	{
+		driveForward(127);
+	}
+	stopBase();
+	float finalVelocity = currentVelocity;
 	traveled = 0;
 	wait1Msec(750); //Wait for robot to completly stop
-	stoppingDistance = traveled;
+	float stoppingDistance = traveled;
+	float massOfRobot = 0;
+	frictionForce = (massOfRobot*pow(finalVelocity, 2))/(2*stoppingDistance);
+	writeDebugStreamLine("friction_Force: %f", stoppingDistance);
 }
 /*
 
@@ -325,7 +352,7 @@ void basicAuto()
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
-	calculateStoppingDistance();
+	calculateFrictionForce();
 	//Drive up to wall
 	driveBackward(25, 127);
 	lockArm = false;
