@@ -29,11 +29,15 @@
 */
 task main()
 {
-	calculateStoppingDistance();
 	clearTimer(T2);
-	startTask(odometry);
 	setToDefault();
+	startTask(odometry);
+	writeDebugStreamLine("Degree_to_radian: %f", degreesToRadians(90));
+	writeDebugStreamLine("Radian_to_degree: %f", radiansToDegrees(-PI/2));
 	//Select
+	calculateStoppingDistance();
+	driveForward(20, 127);
+	/*
 	if(SensorValue[autoSensor])
 	{
 		backStars();
@@ -43,4 +47,5 @@ task main()
 		basicAuto();
 	}
 	writeDebugStreamLine("Total_time_takes: %d",time1(T2));
+	*/
 }

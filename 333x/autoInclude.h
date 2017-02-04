@@ -21,8 +21,8 @@
 
 /*--------------------------------Odometry Variables--------------------------------*/
 float WHEEL_BASE = 76;
-float LEFT_CLICKS_PER_CM = 70;
-float RIGHT_CLICKS_PER_CM = 70;
+float LEFT_CLICKS_PER_CM = 12.28;
+float RIGHT_CLICKS_PER_CM = 12.28;
 float theta = 270;                    /* bot heading */
 float X_pos=0;                    /* bot X position in inches */
 float Y_pos=0;                    /* bot Y position in inches */
@@ -243,7 +243,8 @@ task odometry()
 		cm = (left_cm + right_cm) / 2.0;
 
 		//change the angle of the robot
-		theta += radiansToDegrees((left_cm - right_cm) / WHEEL_BASE);
+		float changeInTheta = (left_cm - right_cm) / WHEEL_BASE;
+		theta += (changeInTheta*180)/PI;
 
 		//Keeps the theta value within 0 and 2*PI radians
 		if(theta >= 360)
