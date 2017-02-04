@@ -300,6 +300,90 @@ task odometry()
 	}
 }
 
+task openPincerRight()
+{
+	float positionOpen = 0;
+	int speed = 127;
+	while(SensorValue[rightPot] > positionOpen)
+	{
+		motor[rightPincer] = speed;
+	}
+	motor[rightPincer] = 0;
+}
+
+task openPincerLeft()
+{
+	float positionOpen = 0;
+	int speed = 127;
+	while(SensorValue[leftPot] > positionOpen)
+	{
+		motor[leftPincer] = speed;
+	}
+	motor[leftPincer] = 0;
+}
+
+task closePincerRight()
+{
+	float positionOpen = 0;
+	int speed = 127;
+	while(SensorValue[rightPot] < positionOpen)
+	{
+		motor[rightPincer] = -speed;
+	}
+	motor[rightPincer] = 0;
+}
+
+task closePincerLeft()
+{
+	float positionOpen = 0;
+	int speed = 127;
+	while(SensorValue[leftPot] < positionOpen)
+	{
+		motor[leftPincer] = -speed;
+	}
+	motor[leftPincer] = 0;
+}
+
+task farPincerRight()
+{
+	float position = 0;
+	int speed = 127;
+	while(SensorValue[rightPot] > position)
+	{
+		motor[rightPincer] = speed;
+	}
+	motor[rightPincer] = 0;
+}
+
+task farPincerLeft()
+{
+	float position = 0;
+	int speed = 127;
+	while(SensorValue[leftPot] > position)
+	{
+		motor[leftPincer] = speed;
+	}
+	motor[leftPincer] = 0;
+}
+
+void openPincers()
+{
+	startTask(openPincerRight);
+	startTask(openPincerLeft);
+}
+
+void closePincers()
+{
+	startTask(closePincerRight);
+	startTask(closePincerLeft);
+}
+
+void farPincers()
+{
+	startTask(farPincerRight);
+	startTask(farPincerLeft);
+}
+
 void setToDefault()
 {
 	nMotorEncoder[topRight] = 0;
