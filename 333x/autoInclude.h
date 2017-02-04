@@ -20,10 +20,10 @@
 #pragma config(Motor,  port10,          leftPincer,    tmotorVex393_HBridge, openLoop)
 
 /*--------------------------------Odometry Variables--------------------------------*/
-float WHEEL_BASE = 76;
-float LEFT_CLICKS_PER_CM = 12.28;
-float RIGHT_CLICKS_PER_CM = 12.28;
-float theta = 270;                    /* bot heading */
+float WHEEL_BASE = 66;
+float LEFT_CLICKS_PER_CM = 10.63;
+float RIGHT_CLICKS_PER_CM = 10.63;
+float theta = 90;                    /* bot heading */
 float X_pos=0;                    /* bot X position in inches */
 float Y_pos=0;                    /* bot Y position in inches */
 float traveled = 0;								//distanced traveled from set point
@@ -146,7 +146,7 @@ void stopBase()
 
 float calculateStoppingDistance()
 {
-	float massOfRobot = 0;
+	float massOfRobot = 7.35;
 	return (massOfRobot*pow(currentVelocity,2))/(2*frictionForce);
 }
 
@@ -166,16 +166,18 @@ void driveForward(int targetDistance, int speed)
 	stopBase();
 }
 
-void driveBackward(int targetDistance, int maxSpeed)
+void driveBackward(int targetDistance, int speed)
 {
-	//Linear function to slow down robot
-	float slope = -maxSpeed/targetDistance;
-	int currentSpeed = maxSpeed;
 	traveled = 0;
-	while(traveled < targetDistance)
+	float stoppingDistance = 0;
+	float pastVelocity = currentVelocity;
+	while(traveled < targetDistance-stoppingDistance)
 	{
-		driveBackward(currentSpeed);
-		currentSpeed = slope*traveled+maxSpeed;
+		if(currentVelocity > pastVelocity)
+		{
+			stoppingDistance = calculateStoppingDistance();
+		}
+		driveBackward(speed);
 	}
 	stopBase();
 }
@@ -187,8 +189,7 @@ bool inRange(float value, float target, float tolerance)
 
 void turnRight(float targetTheta, int speed)
 {
-	float targetThetaRadians = degreesToRadians(targetTheta);
-	while(!inRange(theta, targetThetaRadians, 10))
+	while(!inRange(theta, targetTheta, 10))
 	{
 		turnRight(speed);
 	}
@@ -197,8 +198,7 @@ void turnRight(float targetTheta, int speed)
 
 void turnLeft(float targetTheta, int speed)
 {
-	float targetThetaRadians = degreesToRadians(targetTheta);
-	while(!inRange(theta, targetThetaRadians, 10))
+	while(!inRange(theta, targetTheta, 10))
 	{
 		turnLeft(speed);
 	}
@@ -307,7 +307,7 @@ void setToDefault()
 	nMotorEncoder[backRight] = 0;
 	X_pos = 0;
 	Y_pos = 0;
-	theta = 270;
+	theta = 90;
 	additionalPower = 0;
 	traveled= 0;
 }
@@ -331,7 +331,7 @@ void calculateFrictionForce()
 	traveled = 0;
 	wait1Msec(750); //Wait for robot to completly stop
 	float stoppingDistance = traveled;
-	float massOfRobot = 0;
+	float massOfRobot = 7.35;
 	frictionForce = (massOfRobot*pow(finalVelocity, 2))/(2*stoppingDistance);
 	writeDebugStreamLine("friction_Force: %f", stoppingDistance);
 }

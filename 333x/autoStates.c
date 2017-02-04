@@ -33,8 +33,9 @@ task main()
 	setToDefault();
 	startTask(odometry);
 	//Select
-	//calculateStoppingDistance();
-	driveForward(40, 127);
+	//calculateFrictionForce();
+	//driveForward(40, 127);
+	turnLeft(180, 50);
 	/*
 	if(SensorValue[autoSensor])
 	{
