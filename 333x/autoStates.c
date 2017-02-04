@@ -32,5 +32,5 @@ task main()
 	clearTimer(T2);
 	setToDefault();
 	startTask(odometry);
-	basicAuto();
+	cube();
 }

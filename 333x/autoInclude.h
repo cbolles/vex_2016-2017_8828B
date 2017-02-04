@@ -193,7 +193,7 @@ bool inRange(float value, float target, float tolerance)
 
 void turnRight(float targetTheta, int speed)
 {
-	while(!inRange(theta, targetTheta, 10))
+	while(!inRange(theta, targetTheta, 3))
 	{
 		turnRight(speed);
 	}
@@ -202,7 +202,7 @@ void turnRight(float targetTheta, int speed)
 
 void turnLeft(float targetTheta, int speed)
 {
-	while(!inRange(theta, targetTheta, 10))
+	while(!inRange(theta, targetTheta, 3))
 	{
 		turnLeft(speed);
 	}
@@ -310,7 +310,7 @@ task openPincerRight()
 	int speed = 127;
 	while(SensorValue[rightPot] > positionOpen)
 	{
-		motor[rightPincer] = speed;
+		motor[rightPincer] = -speed;
 	}
 	motor[rightPincer] = 0;
 }
@@ -321,7 +321,7 @@ task openPincerLeft()
 	int speed = 127;
 	while(SensorValue[leftPot] > positionOpen)
 	{
-		motor[leftPincer] = speed;
+		motor[leftPincer] = -speed;
 	}
 	motor[leftPincer] = 0;
 }
@@ -332,7 +332,7 @@ task closePincerRight()
 	int speed = 127;
 	while(SensorValue[rightPot] < positionOpen)
 	{
-		motor[rightPincer] = -speed;
+		motor[rightPincer] = speed;
 	}
 	motor[rightPincer] = 0;
 }
@@ -343,7 +343,7 @@ task closePincerLeft()
 	int speed = 127;
 	while(SensorValue[leftPot] < positionOpen)
 	{
-		motor[leftPincer] = -speed;
+		motor[leftPincer] = speed;
 	}
 	motor[leftPincer] = 0;
 }
@@ -354,7 +354,7 @@ task farPincerRight()
 	int speed = 127;
 	while(SensorValue[rightPot] > position)
 	{
-		motor[rightPincer] = speed;
+		motor[rightPincer] = -speed;
 	}
 	motor[rightPincer] = 0;
 }
@@ -365,7 +365,7 @@ task farPincerLeft()
 	int speed = 127;
 	while(SensorValue[leftPot] > position)
 	{
-		motor[leftPincer] = speed;
+		motor[leftPincer] = -speed;
 	}
 	motor[leftPincer] = 0;
 }
@@ -410,7 +410,7 @@ void calculateFrictionForce()
 {
 	traveled = 0;
 	clearTimer(T1);
-	while(traveled < 51)
+	while(traveled < 30)
 	{
 		driveBackward(127);
 	}
@@ -434,19 +434,19 @@ void basicAuto()
 
 	moveArmDegree(30, 60);
 
-	turnLeft(280, 50);
+	turnLeft(290, 30);
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
-	calculateFrictionForce();
+	//calculateFrictionForce();
 	//Drive up to wall
-	driveBackward(25, 127);
+	driveBackward(85, 127);
 	lockArm = false;
 
 	//Dump Star
-	moveArmDegree(95, 90);
+	moveArmDegree(75, 90);
 
 	//Drop star on wall
 	motor[leftPincer] = 127;
@@ -456,6 +456,28 @@ void basicAuto()
 	motor[rightPincer] = 0;
 
 	moveArmDegree(-100, 75);
+}
+
+void cube()
+{
+	basicAuto();
+	wait1Msec(750);
+	openPincers();
+	driveForward(24, 127);
+	turnLeft(350, 40);
+	driveForward(90, 127);
+	closePincers();
+	moveArmDegree(30, 127);
+
+	lockArm = true;
+	lockArmPosition = nMotorEncoder[topRight];
+	additionalPower = 0;
+
+	turnRight(270, 45);
+	driveBackward(40, 127);
+	moveArmDegree(85, 127);
+	lockArm = false;
+	openPincers();
 }
 
 void backStars()
