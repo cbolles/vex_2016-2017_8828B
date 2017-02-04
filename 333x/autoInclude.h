@@ -23,7 +23,7 @@
 float WHEEL_BASE = 66;
 float LEFT_CLICKS_PER_CM = 10.63;
 float RIGHT_CLICKS_PER_CM = 10.63;
-float theta = 90;                    /* bot heading */
+float theta = 270;                    /* bot heading */
 float X_pos=0;                    /* bot X position in inches */
 float Y_pos=0;                    /* bot Y position in inches */
 float traveled = 0;								//distanced traveled from set point
@@ -147,6 +147,10 @@ void stopBase()
 float calculateStoppingDistance()
 {
 	float massOfRobot = 7.35;
+	if(frictionForce == 0)
+	{
+		return 0;
+	}
 	return (massOfRobot*pow(currentVelocity,2))/(2*frictionForce);
 }
 
@@ -302,7 +306,7 @@ task odometry()
 
 task openPincerRight()
 {
-	float positionOpen = 0;
+	float positionOpen = 2600;
 	int speed = 127;
 	while(SensorValue[rightPot] > positionOpen)
 	{
@@ -313,7 +317,7 @@ task openPincerRight()
 
 task openPincerLeft()
 {
-	float positionOpen = 0;
+	float positionOpen = 2000;
 	int speed = 127;
 	while(SensorValue[leftPot] > positionOpen)
 	{
@@ -324,7 +328,7 @@ task openPincerLeft()
 
 task closePincerRight()
 {
-	float positionOpen = 0;
+	float positionOpen = 4000;
 	int speed = 127;
 	while(SensorValue[rightPot] < positionOpen)
 	{
@@ -335,7 +339,7 @@ task closePincerRight()
 
 task closePincerLeft()
 {
-	float positionOpen = 0;
+	float positionOpen = 3000;
 	int speed = 127;
 	while(SensorValue[leftPot] < positionOpen)
 	{
@@ -346,7 +350,7 @@ task closePincerLeft()
 
 task farPincerRight()
 {
-	float position = 0;
+	float position = 1160;
 	int speed = 127;
 	while(SensorValue[rightPot] > position)
 	{
@@ -357,7 +361,7 @@ task farPincerRight()
 
 task farPincerLeft()
 {
-	float position = 0;
+	float position = 490;
 	int speed = 127;
 	while(SensorValue[leftPot] > position)
 	{
@@ -391,7 +395,7 @@ void setToDefault()
 	nMotorEncoder[backRight] = 0;
 	X_pos = 0;
 	Y_pos = 0;
-	theta = 90;
+	theta = 270;
 	additionalPower = 0;
 	traveled= 0;
 }
@@ -408,7 +412,7 @@ void calculateFrictionForce()
 	clearTimer(T1);
 	while(traveled < 51)
 	{
-		driveForward(127);
+		driveBackward(127);
 	}
 	stopBase();
 	float finalVelocity = currentVelocity;

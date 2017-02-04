@@ -32,19 +32,5 @@ task main()
 	clearTimer(T2);
 	setToDefault();
 	startTask(odometry);
-	//Select
-	//calculateFrictionForce();
-	//driveForward(40, 127);
-	turnLeft(180, 50);
-	/*
-	if(SensorValue[autoSensor])
-	{
-		backStars();
-	}
-	else
-	{
-		basicAuto();
-	}
-	writeDebugStreamLine("Total_time_takes: %d",time1(T2));
-	*/
+	basicAuto();
 }
