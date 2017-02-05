@@ -1,7 +1,8 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    rightPot,       sensorPotentiometer)
 #pragma config(Sensor, in2,    leftPot,        sensorPotentiometer)
-#pragma config(Sensor, in3,    autoControl,    sensorNone)
+#pragma config(Sensor, in3,    leftFollower,   sensorLineFollower)
+#pragma config(Sensor, in4,    rightFollower,  sensorLineFollower)
 #pragma config(Sensor, dgtl1,  autoSensor,     sensorTouch)
 #pragma config(Sensor, dgtl2,  bottomLimit,    sensorNone)
 #pragma config(Sensor, dgtl3,  autoSensor,     sensorNone)
@@ -191,18 +192,18 @@ bool inRange(float value, float target, float tolerance)
 	return abs(value-target) <= tolerance;
 }
 
-void turnRight(float targetTheta, int speed)
+void turnRight(float targetTheta, int speed, int tolerance)
 {
-	while(!inRange(theta, targetTheta, 3))
+	while(!inRange(theta, targetTheta, tolerance))
 	{
 		turnRight(speed);
 	}
 	stopBase();
 }
 
-void turnLeft(float targetTheta, int speed)
+void turnLeft(float targetTheta, int speed, int tolerance)
 {
-	while(!inRange(theta, targetTheta, 3))
+	while(!inRange(theta, targetTheta, tolerance))
 	{
 		turnLeft(speed);
 	}
@@ -222,11 +223,11 @@ void goToPoint(float x, float y, int speed)
 	writeDebugStreamLine("Angle_To_Point: %f",angleToPoint);
 	if(theta - angleToPoint > 5)
 	{
-		turnRight(angleToPoint, speed);
+		turnRight(angleToPoint, speed, 10);
 	}
 	else if(theta - angleToPoint < -5)
 	{
-		turnLeft(angleToPoint, speed);
+		turnLeft(angleToPoint, speed, 10);
 	}
 	driveForward(distanceToPoint, speed);
 }
@@ -339,7 +340,7 @@ task closePincerRight()
 
 task closePincerLeft()
 {
-	float positionOpen = 3000;
+	float positionOpen = 3300;
 	int speed = 127;
 	while(SensorValue[leftPot] < positionOpen)
 	{
@@ -388,6 +389,65 @@ void farPincers()
 	startTask(farPincerLeft);
 }
 
+bool doneRight = false;
+bool doneLeft = false;
+int motorSpeed = 35;
+task midLineRight()
+{
+	doneRight = false;
+	int sensorValueDark = SensorValue[rightFollower];
+	int light = sensorValueDark - 800;
+	while(SensorValue[rightFollower] > light)
+	{
+		motor[frontRight] = motorSpeed;
+		motor[backRight] = motorSpeed;
+	}
+	motor[frontRight] = 0;
+	motor[backRight] = 0;
+	wait1Msec(750);
+	while(SensorValue[rightFollower] > light)
+	{
+		motor[frontRight] = -35;
+		motor[backRight] = -35;
+	}
+	motor[frontRight] = 0;
+	motor[backRight] = 0;
+	doneRight = true;
+}
+
+task midLineLeft()
+{
+	doneLeft = false;
+	int sensorValueDark = SensorValue[leftFollower];
+	int light = sensorValueDark - 800;
+	while(SensorValue[leftFollower] > light)
+	{
+		motor[frontLeft] = motorSpeed;
+		motor[backLeft] = motorSpeed;
+	}
+	motor[frontLeft] = 0;
+	motor[backLeft] = 0;
+	wait1Msec(750);
+	while(SensorValue[leftFollower] > light)
+	{
+		motor[frontLeft] = -35;
+		motor[backLeft] = -35;
+	}
+	motor[frontLeft] = 0;
+	motor[backLeft] = 0;
+	doneLeft = true;
+}
+
+void goToMidLine()
+{
+	startTask(midLineRight);
+	startTask(midLineLeft);
+	while(!doneRight || !doneLeft)//Wait for both tasks to end
+	{
+
+	}
+}
+
 void setToDefault()
 {
 	nMotorEncoder[topRight] = 0;
@@ -434,7 +494,7 @@ void basicAuto()
 
 	moveArmDegree(30, 60);
 
-	turnLeft(290, 30);
+	turnLeft(290, 40, 15);
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
@@ -446,7 +506,7 @@ void basicAuto()
 	lockArm = false;
 
 	//Dump Star
-	moveArmDegree(75, 90);
+	moveArmDegree(110, 90);
 
 	//Drop star on wall
 	motor[leftPincer] = 127;
@@ -463,21 +523,32 @@ void cube()
 	basicAuto();
 	wait1Msec(750);
 	openPincers();
-	driveForward(24, 127);
-	turnLeft(350, 40);
-	driveForward(90, 127);
-	closePincers();
-	moveArmDegree(30, 127);
 
+	//Realign robot
+	goToMidLine();
+	theta = 270;
+
+	//Turn to cube
+	turnLeft(350, 50, 10);
+	driveForward(90, 127);
+
+	//Pick up cube
+	closePincers();
+	wait1Msec(500);
+	moveArmDegree(30, 127);
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
-	turnRight(270, 45);
-	driveBackward(40, 127);
-	moveArmDegree(85, 127);
+	//Turn to wall
+	turnRight(270, 90, 25);
+	driveBackward(70, 127);
+
+	moveArmDegree(110, 127);
 	lockArm = false;
+
 	openPincers();
+	wait1Msec(1000);
 }
 
 void backStars()
@@ -491,7 +562,7 @@ void backStars()
 
 	driveForward(114, 127);
 	theta = 270;
-	turnLeft(327, 127);
+	turnLeft(327, 127, 10);
 	driveForward(35, 127);
 	moveArmDegree(50, 100);
 	theta = 327;
@@ -501,7 +572,7 @@ void backStars()
 	additionalPower = 0;
 
 	driveBackward(76, 127);
-	turnRight(260, 75);
+	turnRight(260, 75, 10);
 	driveBackward(102, 127);
 	moveArmDegree(90, 127);
 	lockArm = false;
