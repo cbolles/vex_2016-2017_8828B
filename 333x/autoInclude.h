@@ -43,6 +43,13 @@ int lockArmPositionUser = 0;
 /*----------------------------------------------------------------------------------*/
 
 /*----------------------------Arm movement functions--------------------------------*/
+
+/*
+	<summary>
+	Runs the arm at a given value
+	</summary
+	<param id=speed>PWM value, positive or negetive</param>
+*/
 void moveArm(int speed)
 {
 	motor[topRight] = speed;
@@ -53,11 +60,24 @@ void moveArm(int speed)
 	lockArmPositionUser = nMotorEncoder[topRight];
 }
 
+/*
+	<summary>
+	Converts the target degrees of the arm to motor encoder ticks
+	</summary>
+	<param id=degrees> Degress the arm should move</param>
+*/
 int degreesToTicks(int degrees)
 {
 	return (int)(degrees / 0.078);//0079 degrees per tick
 }
 
+/*
+	<summary>
+	Has the arm move to a specific angle at a given speed
+	</summary>
+	<param id=degrees>Degrees the arm should move, does not represent a position</param>
+	<param id=speed>PWM value, positive only</param>
+*/
 void moveArmDegree(float degrees, int speed)
 {
 	nMotorEncoder[topRight] = 0;
@@ -82,6 +102,12 @@ void moveArmDegree(float degrees, int speed)
 /*----------------------------------------------------------------------------------*/
 
 /*---------------------------Drive base functions-----------------------------------*/
+/*
+	<summary>
+	Has the robot drive forward at a given speed
+	</summary>
+	<param id=speed>PWM value, positive only</param>
+*/
 void driveForward(int speed)
 {
 	motor[backRight] = speed;
@@ -91,6 +117,12 @@ void driveForward(int speed)
 	motor[frontLeft] = speed;
 }
 
+/*
+	<summary>
+	Has the robot drive backward at a given speed
+	</summary>
+	<param id=speed>PWM value, positive only</param>
+*/
 void driveBackward(int speed)
 {
 	motor[backRight] = -speed;
@@ -100,6 +132,12 @@ void driveBackward(int speed)
 	motor[frontLeft] = -speed;
 }
 
+/*
+	<summary>
+	Has the robot drive towards the left at a given speed
+	</summary>
+	<param id=speed>PWM value, positive only</param>
+*/
 void driveLeftward(int speed)
 {
 	motor[frontRight] = speed;
@@ -329,7 +367,7 @@ task openPincerLeft()
 
 task closePincerRight()
 {
-	float positionOpen = 4000;
+	float positionOpen = 4050;
 	int speed = 127;
 	while(SensorValue[rightPot] < positionOpen)
 	{
@@ -340,7 +378,7 @@ task closePincerRight()
 
 task closePincerLeft()
 {
-	float positionOpen = 3300;
+	float positionOpen = 3400;
 	int speed = 127;
 	while(SensorValue[leftPot] < positionOpen)
 	{
@@ -391,7 +429,7 @@ void farPincers()
 
 bool doneRight = false;
 bool doneLeft = false;
-int motorSpeed = 35;
+int motorSpeed = 40;
 task midLineRight()
 {
 	doneRight = false;
@@ -404,11 +442,11 @@ task midLineRight()
 	}
 	motor[frontRight] = 0;
 	motor[backRight] = 0;
-	wait1Msec(750);
+	wait1Msec(500);
 	while(SensorValue[rightFollower] > light)
 	{
-		motor[frontRight] = -35;
-		motor[backRight] = -35;
+		motor[frontRight] = -50;
+		motor[backRight] = -50;
 	}
 	motor[frontRight] = 0;
 	motor[backRight] = 0;
@@ -427,15 +465,25 @@ task midLineLeft()
 	}
 	motor[frontLeft] = 0;
 	motor[backLeft] = 0;
-	wait1Msec(750);
+	wait1Msec(500);
 	while(SensorValue[leftFollower] > light)
 	{
-		motor[frontLeft] = -35;
-		motor[backLeft] = -35;
+		motor[frontLeft] = -50;
+		motor[backLeft] = -50;
 	}
 	motor[frontLeft] = 0;
 	motor[backLeft] = 0;
 	doneLeft = true;
+}
+
+void goPastStartTile()
+{
+	int initalValue = SensorValue[threeStarLine];
+	while(SensorValue[threeStarLine] > initalValue - 200)
+	{
+		driveBackward(127);
+	}
+	stopBase();
 }
 
 void goToMidLine()
@@ -483,6 +531,19 @@ void calculateFrictionForce()
 	frictionForce = (massOfRobot*pow(finalVelocity, 2))/(2*stoppingDistance);
 	writeDebugStreamLine("friction_Force: %f", stoppingDistance);
 }
+
+void lockArmUser()
+{
+	if(lockArmPositionUser > nMotorEncoder[topRight]+3)
+	{
+		additionalPower += 2; //Increment by 2
+	}
+	if(lockArmPosition > nMotorEncoder[topRight] + 100)
+	{
+		lockArmPositionUser = nMotorEncoder[topRight];
+	}
+	moveArm(additionalPower); //Zero if locked it on its own
+}
 /*
 
 /*---------------------------Autos----------------------------------------------------*/
@@ -506,12 +567,12 @@ void basicAuto()
 	lockArm = false;
 
 	//Dump Star
-	moveArmDegree(110, 90);
+	moveArmDegree(95, 90);
 
 	//Drop star on wall
 	motor[leftPincer] = 127;
 	motor[rightPincer] = 127;
-	wait1Msec(1000);
+	wait1Msec(750);
 	motor[leftPincer] = 0;
 	motor[rightPincer] = 0;
 
@@ -530,7 +591,7 @@ void cube()
 
 	//Turn to cube
 	turnLeft(350, 50, 10);
-	driveForward(90, 127);
+	driveForward(75, 127);
 
 	//Pick up cube
 	closePincers();
@@ -541,7 +602,7 @@ void cube()
 	additionalPower = 0;
 
 	//Turn to wall
-	turnRight(270, 90, 25);
+	turnRight(270, 100, 30);
 	driveBackward(70, 127);
 
 	moveArmDegree(110, 127);
@@ -553,28 +614,50 @@ void cube()
 
 void backStars()
 {
-	basicAuto();
-	motor[leftPincer] = -127;
-	motor[rightPincer] = -127;
-	wait1Msec(750);
-	motor[leftPincer] = 0;
-	motor[rightPincer] = 0;
+	theta = 0;
 
-	driveForward(114, 127);
-	theta = 270;
-	turnLeft(327, 127, 10);
-	driveForward(35, 127);
-	moveArmDegree(50, 100);
-	theta = 327;
+	driveBackward(30, 127);
+	driveForward(90, 127);
+	moveArmDegree(60, 127);
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
-	driveBackward(76, 127);
-	turnRight(260, 75, 10);
-	driveBackward(102, 127);
-	moveArmDegree(90, 127);
+	driveBackward(90, 127);
+	turnRight(300, 50, 10);
+	driveBackward(100, 127);
+	goPastStartTile();
+
+	moveArmDegree(60, 127);
 	lockArm = false;
+
+	closePincers();
+	wait1Msec(750);
+
+}
+
+void backTwo()
+{
+	theta = 180;
+
+	driveBackward(60, 127);
+	driveForward(85, 127);
+	moveArmDegree(60, 127);
+
+	lockArm = true;
+	lockArmPosition = nMotorEncoder[topRight];
+	additionalPower = 0;
+
+	turnLeft(280, 50, 10);
+
+	driveBackward(135, 127);
+	moveArmDegree(75, 127);
+	lockArm = false;
+	closePincers();
+	wait1Msec(750);
+	openPincers();
+	wait1Msec(500);
+	moveArmDegree(-100, 127);
 }
 /*------------------------------------------------------------------------------------*/
