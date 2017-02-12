@@ -147,6 +147,12 @@ void driveLeftward(int speed)
 	motor[backLeft] = -speed;
 }
 
+/*
+	<summary>
+	Has the robot drive towards the right at a given speed
+	</summary>
+	<param id=speed>PWM value, positive only</param>
+*/
 void driveRightward(int speed)
 {
 	motor[frontRight] = -speed;
@@ -156,6 +162,12 @@ void driveRightward(int speed)
 	motor[backLeft] = speed;
 }
 
+/*
+	<summary>
+	Turn the robot to to the right at a given speed
+	</summary>
+	<param id=speed>PWM value, positive only</param>
+*/
 void turnRight(int speed)
 {
 	motor[frontRight] = -speed;
@@ -165,6 +177,12 @@ void turnRight(int speed)
 	motor[backLeft] = speed;
 }
 
+/*
+	<summary>
+	Turn the robot to to the left at a given speed
+	</summary>
+	<param id=speed>PWM value, positive only</param>
+*/
 void turnLeft(int speed)
 {
 	motor[frontRight] = speed;
@@ -174,6 +192,11 @@ void turnLeft(int speed)
 	motor[backLeft] = -speed;
 }
 
+/*
+	<summary>
+	Stops all base motors
+	</summary>
+*/
 void stopBase()
 {
 	motor[frontRight] = 0;
@@ -183,6 +206,12 @@ void stopBase()
 	motor[backLeft] = 0;
 }
 
+/*
+	<summary>
+	Calulates how far the robot has to go for friction to entierly stop the robot.
+	Requires calculateFrictionForce to run once before hand
+	</summary>
+*/
 float calculateStoppingDistance()
 {
 	float massOfRobot = 7.35;
@@ -193,6 +222,13 @@ float calculateStoppingDistance()
 	return (massOfRobot*pow(currentVelocity,2))/(2*frictionForce);
 }
 
+/*
+	<summary>
+	Has the robot drive forward for a given distance at a given speed
+	</summary>
+	<param id=targetDistance>Distance in cm the robot has to go</param>
+	<param id=speed>PWM value, positive only</param>
+*/
 void driveForward(int targetDistance, int speed)
 {
 	traveled = 0;
@@ -209,6 +245,13 @@ void driveForward(int targetDistance, int speed)
 	stopBase();
 }
 
+/*
+	<summary>
+	Has the robot drive backward for a given distance at a given speed
+	</summary>
+	<param id=targetDistance>Distance in cm the robot has to go</param>
+	<param id=speed>PWM value, positive only</param>
+*/
 void driveBackward(int targetDistance, int speed)
 {
 	traveled = 0;
@@ -225,11 +268,27 @@ void driveBackward(int targetDistance, int speed)
 	stopBase();
 }
 
+/*
+	<summary>
+	Determines if the robot is within a target theta by a given tolerance
+	</summary>
+	<param id=value>Current theta of the robot in degrees</param>
+	<parma id=target>Target theta in degrees</param>
+	<parma id=tolerance>How close the robot has to be to the target value (+-)</param>
+*/
 bool inRange(float value, float target, float tolerance)
 {
 	return abs(value-target) <= tolerance;
 }
 
+/*
+	<summary>
+	Has the robot turn right to a given angle at a given speed and tolerance
+	</summary>
+	<param id=targetTheta>Target theta in degrees for robot to turn to</param>
+	<param id=speed>PWM value, positive only</parma>
+	<param id=tolerance>Tolerance the robot theta can be to the target theta</param>
+*/
 void turnRight(float targetTheta, int speed, int tolerance)
 {
 	while(!inRange(theta, targetTheta, tolerance))
@@ -239,6 +298,14 @@ void turnRight(float targetTheta, int speed, int tolerance)
 	stopBase();
 }
 
+/*
+	<summary>
+	Has the robot turn left to a given angle at a given speed and tolerance
+	</summary>
+	<param id=targetTheta>Target theta in degrees for robot to turn to</param>
+	<param id=speed>PWM value, positive only</parma>
+	<param id=tolerance>Tolerance the robot theta can be to the target theta</param>
+*/
 void turnLeft(float targetTheta, int speed, int tolerance)
 {
 	while(!inRange(theta, targetTheta, tolerance))
@@ -248,6 +315,14 @@ void turnLeft(float targetTheta, int speed, int tolerance)
 	stopBase();
 }
 
+/*
+	<summary>
+	Has the robot move to a set coordinate on the field measured in cm
+	</summary>
+	<param id=x>Target x coordinate</param>
+	<param id=y>Target y coordiante</param>
+	<param id=speed>PWM value, positive only</param>
+*/
 void goToPoint(float x, float y, int speed)
 {
 	float xDistance = x - X_pos+.01;
@@ -271,6 +346,12 @@ void goToPoint(float x, float y, int speed)
 }
 /*----------------------------------------------------------------------------------*/
 
+/*
+	<summary>
+	Calculates the x and y coordinates in cm and theta in degrees of the robot.
+	Task has to be running to call base control functions
+	</summary>
+*/
 task odometry()
 {
 	nMotorEncoder[backRight] = 0;
@@ -343,6 +424,11 @@ task odometry()
 	}
 }
 
+/*
+	<summary>
+	Has the right pincer open to a fixed position
+	</summary>
+*/
 task openPincerRight()
 {
 	float positionOpen = 2600;
@@ -354,6 +440,11 @@ task openPincerRight()
 	motor[rightPincer] = 0;
 }
 
+/*
+	<summary>
+	Has the left pincer open to a fixed position at a fixed speed
+	</summary>
+*/
 task openPincerLeft()
 {
 	float positionOpen = 2000;
@@ -365,6 +456,11 @@ task openPincerLeft()
 	motor[leftPincer] = 0;
 }
 
+/*
+	<summary>
+	Has the right pincer close to a fixed position at a fixed speed
+	</summary>
+*/
 task closePincerRight()
 {
 	float positionOpen = 4050;
@@ -376,6 +472,11 @@ task closePincerRight()
 	motor[rightPincer] = 0;
 }
 
+/*
+	<summary>
+	Has the left pincer close to a fixed position at a fixed speed
+	</summary>
+*/
 task closePincerLeft()
 {
 	float positionOpen = 3400;
@@ -387,6 +488,11 @@ task closePincerLeft()
 	motor[leftPincer] = 0;
 }
 
+/*
+	<summary>
+	Has the right pincer open as far as possible at a fixed speed
+	</summary>
+*/
 task farPincerRight()
 {
 	float position = 1160;
@@ -398,6 +504,11 @@ task farPincerRight()
 	motor[rightPincer] = 0;
 }
 
+/*
+	<summary>
+	Has the left pincer open as far as possible at a fixed speed
+	</summary>
+*/
 task farPincerLeft()
 {
 	float position = 490;
@@ -409,24 +520,44 @@ task farPincerLeft()
 	motor[leftPincer] = 0;
 }
 
+/*
+	<summary>
+	Calls the open pincer tasks
+	</summary>
+*/
 void openPincers()
 {
 	startTask(openPincerRight);
 	startTask(openPincerLeft);
 }
 
+/*
+	<summary>
+	Calls the close pincer tasks
+	</summary>
+*/
 void closePincers()
 {
 	startTask(closePincerRight);
 	startTask(closePincerLeft);
 }
 
+/*
+	<summary>
+	Has both pincers open as far as possible
+	</summary>
+*/
 void farPincers()
 {
 	startTask(farPincerRight);
 	startTask(farPincerLeft);
 }
 
+/*
+	<summary>
+	Has the right wheel align itself over the white midline at a fixed speed
+	</summary>
+*/
 bool doneRight = false;
 bool doneLeft = false;
 int motorSpeed = 40;
@@ -453,6 +584,11 @@ task midLineRight()
 	doneRight = true;
 }
 
+/*
+	<summary>
+	Has the left wheel align itself over the white midline at a fixed speed
+	</summary>
+*/
 task midLineLeft()
 {
 	doneLeft = false;
@@ -486,6 +622,11 @@ void goPastStartTile()
 	stopBase();
 }
 
+/*
+	<summary>
+	Has both wheels align themselves over the white midline
+	</summary>
+*/
 void goToMidLine()
 {
 	startTask(midLineRight);
@@ -496,6 +637,12 @@ void goToMidLine()
 	}
 }
 
+/*
+	<summary>
+	Sets the default global varaibles. Must be called
+	before any other function!
+	</summary>
+*/
 void setToDefault()
 {
 	nMotorEncoder[topRight] = 0;
@@ -514,6 +661,11 @@ In here will be functions to tell which value a potentiometer is at to determine
 auto to run
 */
 /*------------------------------------------------------------------------------------*/
+/*
+	<summary>
+	Calculates the friction present on the robot
+	</summary>
+*/
 void calculateFrictionForce()
 {
 	traveled = 0;
@@ -532,6 +684,11 @@ void calculateFrictionForce()
 	writeDebugStreamLine("friction_Force: %f", stoppingDistance);
 }
 
+/*
+	<summary>
+	Allows the user to lock the arm at a given position
+	</summary>
+*/
 void lockArmUser()
 {
 	if(lockArmPositionUser > nMotorEncoder[topRight]+3)
@@ -547,6 +704,12 @@ void lockArmUser()
 /*
 
 /*---------------------------Autos----------------------------------------------------*/
+/*
+	<summary>
+	Drops star onto claw, drive up to near wall. Dumps preload
+	and opens pincers to knock all stars off the near wall
+	</summary>
+*/
 void basicAuto()
 {
 	//Drop Preload
@@ -579,6 +742,12 @@ void basicAuto()
 	moveArmDegree(-100, 75);
 }
 
+/*
+	<summary>
+	Runs basic auto, then goes to midline to realign then
+	picks up cube, dumping it on the middle fence
+	</summary>
+*/
 void cube()
 {
 	basicAuto();
@@ -612,6 +781,11 @@ void cube()
 	wait1Msec(1000);
 }
 
+/*
+	<summary>
+	Picks up the back three stars and dump them on the near wall
+	</summary>
+*/
 void backStars()
 {
 	theta = 0;
@@ -637,6 +811,12 @@ void backStars()
 
 }
 
+/*
+	<summary>
+	Picks up the preload and the back single star and dumps
+	them on the near wall
+	</summary>
+*/
 void backTwo()
 {
 	theta = 180;
