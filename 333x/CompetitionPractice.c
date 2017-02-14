@@ -1,7 +1,6 @@
 #pragma config(UART_Usage, UART1, uartVEXLCD, baudRate19200, IOPins, None, None)
 #pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, in1,    rightPot,       sensorNone)
-#pragma config(Sensor, in2,    leftPot,        sensorPotentiometer)
+#pragma config(Sensor, in1,    pincerPot,      sensorPotentiometer)
 #pragma config(Sensor, in3,    leftFollower,   sensorLineFollower)
 #pragma config(Sensor, in4,    rightFollower,  sensorLineFollower)
 #pragma config(Sensor, in5,    threeStarLine,  sensorLineFollower)
@@ -41,57 +40,7 @@
 #include "autoInclude.h"
 
 int autoSelect = 0; //0=cube, 1=basic,2=backThree, 3=backTwo
-/*
-<summary>
-Allows the user to select the auto to run
-</summary>
-*/
-task selectAuto()
-{
-	bLCDBacklight = true;
-	int currentOption = 0;
-	clearLCDLine(0);
-	clearLCDLine(1);
-	string autoOptions[] = {"cube", "basic", "backThree", "backTwo"};
-	while()
-	{
-		clearLCDLine(0);
-		clearLCDLine(1);
-
-		if(nLCDButtons == kButtonRight)
-		{
-			currentOption++;
-		}
-		else if(nLCDButtons == kButtonLeft)
-		{
-			currentOption--;
-		}
-
-		if(currentOption > 3)
-		{
-			currentOption = 0;
-		}
-		else if(currentOption < 0)
-		{
-			currentOption = 3;
-		}
-
-		if(nLCDButtons == kButtonCenter)
-		{
-			autoSelect = currentOption;
-		}
-
-		if(currentOption == autoSelect)
-		{
-			displayLCDPos(1,0);
-			displayNextLCDString("Selected");
-		}
-
-		displayLCDPos(0,0);
-		displayNextLCDString(autoOptions[currentOption]);
-		wait1Msec(250);
-	}
-}
+bool cubeAtRight = true;
 void pre_auton()
 {
 	bLCDBacklight = true;
@@ -127,14 +76,29 @@ void pre_auton()
 			autoSelect = currentOption;
 		}
 
+		if(nLCDButtons == kButtonLeft+kButtonRight)
+		{
+			cubeAtRight = !cubeAtRight;
+		}
+
 		if(currentOption == autoSelect)
 		{
 			displayLCDPos(1,0);
 			displayNextLCDString("Selected");
 		}
 
+
 		displayLCDPos(0,0);
 		displayNextLCDString(autoOptions[currentOption]);
+		displayNextLCDString(" ");
+		if(cubeAtRight)
+		{
+			displayNextLCDString("Right");
+		}
+		else
+		{
+			displayNextLCDString("Left");
+		}
 		wait1Msec(250);
 	}
 	bStopTasksBetweenModes = true;
@@ -159,19 +123,19 @@ task autonomous()
 	setToDefault();
 	if(autoSelect == 0)
 	{
-		cube();
+		cube(cubeAtRight);
 	}
 	else if(autoSelect == 1)
 	{
-		basicAuto();
+		basicAuto(cubeAtRight);
 	}
 	else if(autoSelect == 2)
 	{
-		backStars();
+		backStars(cubeAtRight);
 	}
 	else if(autoSelect == 3)
 	{
-		backTwo();
+		backTwo(cubeAtRight);
 	}
 	writeDebugStreamLine("%d:",time1(T2));
 }
@@ -246,7 +210,6 @@ void movePincher()
 		motor[rightPincer] = clawAdditionalPower;
 	}
 }
-
 bool lockClawButtonPressed = false;
 bool lockPincer = false;
 void lockClaw()
@@ -261,7 +224,7 @@ void lockClaw()
 		lockClawButtonPressed = false;
 	}
 
-	if(lockPincer)
+	if(lockPincer && SensorValue[pincerPot] < 3900)
 	{
 		clawAdditionalPower = 50;
 	}
@@ -271,115 +234,77 @@ void lockClaw()
 	}
 }
 
-
 void pincherOpenClose()
 {
-	int zeroRightPot = 180; //Values to set the potentiometer value to zero
-	int zeroLeftPot = 400;
-
-	int positionOpenRight = 2600; //Potentiometer readings for each of the three positions and each arm
-	int positionOpenLeft = 2000;
-	int positionCloseRight = 4000;
-	int positionCloseLeft = 3400;
-	int positionFarRight = 1200;
-	int positionFarLeft = 440;
-
+	int positionBack = 0;
+	int positionOpen = 1960;
+	int positionClose = 3800;
 	int pincerSpeed = 127;
 
-	int tolorance = 25;
+	int tolerance = 100;
 
-	//Open Position control
-	if(vexRT[Btn5D])
+
+	//Close Picer
+	if(vexRT[Btn5U])
 	{
-		//right pincher
-		if(SensorValue[rightPot] > positionOpenRight + tolorance)
-		{
-			motor[rightPincer] = -pincerSpeed;
-		}
-		else if(SensorValue[rightPot] < positionOpenRight-tolorance)
+		if(SensorValue[pincerPot] < positionClose-tolerance)
 		{
 			motor[rightPincer] = pincerSpeed;
-		}
-		else
-		{
-			motor[rightPincer] = clawAdditionalPower;
-		}
-
-		//left pincher
-		if(SensorValue[leftPot] < positionOpenLeft-tolorance)
-		{
 			motor[leftPincer] = pincerSpeed;
 		}
-		else if(SensorValue[leftPot] > positionOpenLeft+tolorance)
+		else if(SensorValue[pincerPot] > positionClose+tolerance)
 		{
+			motor[rightPincer] = -pincerSpeed;
 			motor[leftPincer] = -pincerSpeed;
 		}
 		else
 		{
+			motor[rightPincer] = 0;
+			motor[leftPincer] = 0;
+		}
+	}
+	//Open Pincer
+	else if(vexRT[Btn5D])
+	{
+		if(SensorValue[pincerPot] < positionOpen-tolerance)
+		{
+			motor[rightPincer] = pincerSpeed;
+			motor[leftPincer] = pincerSpeed;
+		}
+		else if(SensorValue[pincerPot] > positionOpen+tolerance)
+		{
+			motor[rightPincer] = -pincerSpeed;
+			motor[leftPincer] = -pincerSpeed;
+		}
+		else
+		{
+			motor[rightPincer] = clawAdditionalPower;
 			motor[leftPincer] = clawAdditionalPower;
 		}
 	}
-
-	//Close control
-	else if(vexRT[Btn5U])
+	//Position Far
+	else if(vexRT[Btn8D])
 	{
-		//right pincer
-		if(SensorValue[rightPot] > positionCloseRight+tolorance)
-		{
-			motor[rightPincer] = -pincerSpeed;
-		}
-		else if(SensorValue[rightPot] < positionCloseRight-tolorance)
+		if(SensorValue[pincerPot] < positionBack-tolerance)
 		{
 			motor[rightPincer] = pincerSpeed;
-		}
-		else
-		{
-			motor[rightPincer] = clawAdditionalPower;
-		}
-
-		//left pincher
-		if(SensorValue[leftPot] < positionCloseLeft-tolorance)
-		{
 			motor[leftPincer] = pincerSpeed;
 		}
-		else if(SensorValue[leftPot] > positionCloseLeft+tolorance)
+		else if(SensorValue[pincerPot] > positionBack+tolerance)
 		{
+			motor[rightPincer] = -pincerSpeed;
 			motor[leftPincer] = -pincerSpeed;
 		}
 		else
 		{
+			motor[rightPincer] = clawAdditionalPower;
 			motor[leftPincer] = clawAdditionalPower;
 		}
 	}
-	else if(vexRT[Btn8D])//Getting into tight corners
+	else
 	{
-		//right pincer
-		if(SensorValue[rightPot] > positionFarRight+tolorance)
-		{
-			motor[rightPincer] = -pincerSpeed;
-		}
-		else if(SensorValue[rightPot] < positionFarRight-tolorance)
-		{
-			motor[rightPincer] = pincerSpeed;
-		}
-		else
-		{
-			motor[rightPincer] = clawAdditionalPower;
-		}
-
-		//left pincher
-		if(SensorValue[leftPot]-zeroLeftPot < positionFarLeft-tolorance)
-		{
-			motor[leftPincer] = pincerSpeed;
-		}
-		else if(SensorValue[leftPot]-zeroLeftPot > positionFarLeft+tolorance)
-		{
-			motor[leftPincer] = -pincerSpeed;
-		}
-		else
-		{
-			motor[leftPincer] = clawAdditionalPower;
-		}
+		motor[rightPincer] = clawAdditionalPower;
+		motor[leftPincer] = clawAdditionalPower;
 	}
 }
 
@@ -423,7 +348,6 @@ task usercontrol()
 	{
 		driveControl();
 		dumpControl();
-		movePincher();
 		pincherOpenClose();
 		lockClaw();
 		wait10Msec(2); //Motors can only be updated every 20ms

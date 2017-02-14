@@ -1,24 +1,3 @@
-#pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, in1,    rightPot,       sensorPotentiometer)
-#pragma config(Sensor, in2,    leftPot,        sensorPotentiometer)
-#pragma config(Sensor, in3,    leftFollower,   sensorLineFollower)
-#pragma config(Sensor, in4,    rightFollower,  sensorLineFollower)
-#pragma config(Sensor, dgtl1,  autoSensor,     sensorTouch)
-#pragma config(Sensor, dgtl2,  bottomLimit,    sensorNone)
-#pragma config(Sensor, dgtl3,  autoSensor,     sensorNone)
-#pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
-#pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
-#pragma config(Sensor, I2C_3,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
-#pragma config(Motor,  port1,           rightPincer,   tmotorVex393_HBridge, openLoop)
-#pragma config(Motor,  port2,           bottomRight,   tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port3,           topLeft,       tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           frontRight,    tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port5,           frontLeft,     tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           backRight,     tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_1)
-#pragma config(Motor,  port7,           backLeft,      tmotorVex393_MC29, openLoop, encoderPort, I2C_2)
-#pragma config(Motor,  port8,           bottomLeft,    tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port9,           topRight,      tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_3)
-#pragma config(Motor,  port10,          leftPincer,    tmotorVex393_HBridge, openLoop)
 
 /*--------------------------------Odometry Variables--------------------------------*/
 float WHEEL_BASE = 66;
@@ -429,30 +408,16 @@ task odometry()
 	Has the right pincer open to a fixed position
 	</summary>
 */
-task openPincerRight()
+task openPincer()
 {
-	float positionOpen = 2600;
+	float positionOpen = 1960;
 	int speed = 127;
-	while(SensorValue[rightPot] > positionOpen)
+	while(SensorValue[pincerPot] > positionOpen)
 	{
 		motor[rightPincer] = -speed;
-	}
-	motor[rightPincer] = 0;
-}
-
-/*
-	<summary>
-	Has the left pincer open to a fixed position at a fixed speed
-	</summary>
-*/
-task openPincerLeft()
-{
-	float positionOpen = 2000;
-	int speed = 127;
-	while(SensorValue[leftPot] > positionOpen)
-	{
 		motor[leftPincer] = -speed;
 	}
+	motor[rightPincer] = 0;
 	motor[leftPincer] = 0;
 }
 
@@ -461,30 +426,16 @@ task openPincerLeft()
 	Has the right pincer close to a fixed position at a fixed speed
 	</summary>
 */
-task closePincerRight()
+task closePincer()
 {
-	float positionOpen = 4050;
+	float positionOpen = 3800;
 	int speed = 127;
-	while(SensorValue[rightPot] < positionOpen)
+	while(SensorValue[pincerPot] < positionOpen)
 	{
 		motor[rightPincer] = speed;
-	}
-	motor[rightPincer] = 0;
-}
-
-/*
-	<summary>
-	Has the left pincer close to a fixed position at a fixed speed
-	</summary>
-*/
-task closePincerLeft()
-{
-	float positionOpen = 3400;
-	int speed = 127;
-	while(SensorValue[leftPot] < positionOpen)
-	{
 		motor[leftPincer] = speed;
 	}
+	motor[rightPincer] = 0;
 	motor[leftPincer] = 0;
 }
 
@@ -493,33 +444,23 @@ task closePincerLeft()
 	Has the right pincer open as far as possible at a fixed speed
 	</summary>
 */
-task farPincerRight()
+task farPincer()
 {
-	float position = 1160;
+	float position = 0;
 	int speed = 127;
-	while(SensorValue[rightPot] > position)
+	while(SensorValue[pincerPot] > position)
 	{
 		motor[rightPincer] = -speed;
-	}
-	motor[rightPincer] = 0;
-}
-
-/*
-	<summary>
-	Has the left pincer open as far as possible at a fixed speed
-	</summary>
-*/
-task farPincerLeft()
-{
-	float position = 490;
-	int speed = 127;
-	while(SensorValue[leftPot] > position)
-	{
 		motor[leftPincer] = -speed;
 	}
+	motor[rightPincer] = 0;
 	motor[leftPincer] = 0;
 }
 
+void farPincers()
+{
+	startTask(farPincer);
+}
 /*
 	<summary>
 	Calls the open pincer tasks
@@ -527,8 +468,7 @@ task farPincerLeft()
 */
 void openPincers()
 {
-	startTask(openPincerRight);
-	startTask(openPincerLeft);
+	startTask(openPincer);
 }
 
 /*
@@ -538,19 +478,7 @@ void openPincers()
 */
 void closePincers()
 {
-	startTask(closePincerRight);
-	startTask(closePincerLeft);
-}
-
-/*
-	<summary>
-	Has both pincers open as far as possible
-	</summary>
-*/
-void farPincers()
-{
-	startTask(farPincerRight);
-	startTask(farPincerLeft);
+	startTask(closePincer);
 }
 
 /*
@@ -710,7 +638,7 @@ void lockArmUser()
 	and opens pincers to knock all stars off the near wall
 	</summary>
 */
-void basicAuto()
+void basicAuto(bool right)
 {
 	//Drop Preload
 	driveBackward(18, 127);
@@ -718,7 +646,14 @@ void basicAuto()
 
 	moveArmDegree(30, 60);
 
-	turnLeft(290, 40, 15);
+	if(right)
+	{
+		turnLeft(290, 40, 15);
+	}
+	else
+	{
+		turnRight(250, 40, 15);
+	}
 
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
@@ -748,9 +683,9 @@ void basicAuto()
 	picks up cube, dumping it on the middle fence
 	</summary>
 */
-void cube()
+void cube(bool right)
 {
-	basicAuto();
+	basicAuto(right);
 	wait1Msec(750);
 	openPincers();
 
@@ -759,7 +694,14 @@ void cube()
 	theta = 270;
 
 	//Turn to cube
-	turnLeft(350, 50, 10);
+	if(right)
+	{
+		turnLeft(350, 50, 10);
+	}
+	else
+	{
+		turnRight(190, 50, 10);
+	}
 	driveForward(75, 127);
 
 	//Pick up cube
@@ -771,7 +713,14 @@ void cube()
 	additionalPower = 0;
 
 	//Turn to wall
-	turnRight(270, 100, 30);
+	if(right)
+	{
+		turnRight(270, 100, 30);
+	}
+	else
+	{
+		turnLeft(270, 100, 30);
+	}
 	driveBackward(70, 127);
 
 	moveArmDegree(110, 127);
@@ -786,7 +735,7 @@ void cube()
 	Picks up the back three stars and dump them on the near wall
 	</summary>
 */
-void backStars()
+void backStars(bool right)
 {
 	theta = 0;
 
@@ -799,9 +748,15 @@ void backStars()
 	additionalPower = 0;
 
 	driveBackward(90, 127);
-	turnRight(300, 50, 10);
+	if(right)
+	{
+		turnRight(300, 50, 10);
+	}
+	else
+	{
+		turnLeft(120, 50, 10);
+	}
 	driveBackward(100, 127);
-	goPastStartTile();
 
 	moveArmDegree(60, 127);
 	lockArm = false;
@@ -817,7 +772,7 @@ void backStars()
 	them on the near wall
 	</summary>
 */
-void backTwo()
+void backTwo(bool right)
 {
 	theta = 180;
 
@@ -829,7 +784,14 @@ void backTwo()
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
 
-	turnLeft(280, 50, 10);
+	if(right)
+	{
+		turnLeft(280, 50, 10);
+	}
+	else
+	{
+		turnRight(100, 50, 10);
+	}
 
 	driveBackward(135, 127);
 	moveArmDegree(75, 127);
