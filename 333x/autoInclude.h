@@ -428,7 +428,7 @@ task openPincer()
 */
 task closePincer()
 {
-	float positionOpen = 3800;
+	float positionOpen = 4000;
 	int speed = 127;
 	while(SensorValue[pincerPot] < positionOpen)
 	{
@@ -493,7 +493,7 @@ task midLineRight()
 {
 	doneRight = false;
 	int sensorValueDark = SensorValue[rightFollower];
-	int light = sensorValueDark - 800;
+	int light = sensorValueDark - 500;
 	while(SensorValue[rightFollower] > light)
 	{
 		motor[frontRight] = motorSpeed;
@@ -521,7 +521,7 @@ task midLineLeft()
 {
 	doneLeft = false;
 	int sensorValueDark = SensorValue[leftFollower];
-	int light = sensorValueDark - 800;
+	int light = sensorValueDark - 500;
 	while(SensorValue[leftFollower] > light)
 	{
 		motor[frontLeft] = motorSpeed;
@@ -673,7 +673,8 @@ void basicAuto(bool right)
 	wait1Msec(750);
 	motor[leftPincer] = 0;
 	motor[rightPincer] = 0;
-
+	driveForward(20, 127);
+	driveBackward(20, 127);
 	moveArmDegree(-100, 75);
 }
 
@@ -700,14 +701,14 @@ void cube(bool right)
 	}
 	else
 	{
-		turnRight(190, 50, 10);
+		turnRight(180, 50, 10);
 	}
 	driveForward(75, 127);
 
 	//Pick up cube
 	closePincers();
 	wait1Msec(500);
-	moveArmDegree(30, 127);
+	moveArmDegree(40, 127);
 	lockArm = true;
 	lockArmPosition = nMotorEncoder[topRight];
 	additionalPower = 0;
@@ -721,9 +722,9 @@ void cube(bool right)
 	{
 		turnLeft(270, 100, 30);
 	}
-	driveBackward(70, 127);
+	driveBackward(40, 127);
 
-	moveArmDegree(110, 127);
+	moveArmDegree(80, 127);
 	lockArm = false;
 
 	openPincers();
