@@ -13,10 +13,10 @@
 #pragma config(Motor,  port1,           rightPincer,   tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port2,           bottomRight,   tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port3,           topLeft,       tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port4,           frontRight,    tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port5,           frontLeft,     tmotorVex393_MC29, openLoop)
-#pragma config(Motor,  port6,           backRight,     tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_1)
-#pragma config(Motor,  port7,           backLeft,      tmotorVex393_MC29, openLoop, encoderPort, I2C_2)
+#pragma config(Motor,  port4,           frontRight,    tmotorVex393_MC29, openLoop, encoderPort, I2C_2)
+#pragma config(Motor,  port5,           backRight,     tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port6,           backLeft,      tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_1)
+#pragma config(Motor,  port7,           frontLeft,     tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port8,           bottomLeft,    tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port9,           topRight,      tmotorVex393_MC29, openLoop, reversed, encoderPort, I2C_3)
 #pragma config(Motor,  port10,          leftPincer,    tmotorVex393_HBridge, openLoop)
@@ -173,10 +173,10 @@ void driveControl()
 		X2 = 0;
 
 	//Remote Control Commands
-	motor[frontRight] = Y1 - X2 - X1;
-	motor[backRight] =  Y1 - X2 + X1;
-	motor[frontLeft] = Y1 + X2 + X1;
-	motor[backLeft] =  Y1 + X2 - X1;
+	motor[frontRight] = Y1 + X2 + X1;
+	motor[backRight] =  Y1 + X2 - X1;
+	motor[frontLeft] = Y1 - X2 + X1;
+	motor[backLeft] =  Y1 - X2 - X1;
 }
 
 //Basic open and close of pincher claws
