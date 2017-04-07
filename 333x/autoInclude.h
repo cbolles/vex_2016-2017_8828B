@@ -149,11 +149,11 @@ void driveRightward(int speed)
 */
 void turnRight(int speed)
 {
-	motor[frontRight] = -speed;
-	motor[frontLeft] = speed;
+	motor[frontRight] = speed;
+	motor[frontLeft] = -speed;
 
-	motor[backRight] = -speed;
-	motor[backLeft] = speed;
+	motor[backRight] = speed;
+	motor[backLeft] = -speed;
 }
 
 /*
@@ -164,11 +164,11 @@ void turnRight(int speed)
 */
 void turnLeft(int speed)
 {
-	motor[frontRight] = speed;
-	motor[frontLeft] = -speed;
+	motor[frontRight] = -speed;
+	motor[frontLeft] = speed;
 
-	motor[backRight] = speed;
-	motor[backLeft] = -speed;
+	motor[backRight] = -speed;
+	motor[backLeft] = speed;
 }
 
 /*
@@ -345,8 +345,8 @@ task odometry()
 	float left_cm, right_cm, cm;
 	while (true)
 	{
-		lsamp = nMotorEncoder[backRight];
-		rsamp = nMotorEncoder[backLeft];
+		lsamp = nMotorEncoder[backLeft];
+		rsamp = nMotorEncoder[backRight];
 
 		//Change in encoder values
 		L_ticks = lsamp - last_left;
