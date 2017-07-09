@@ -1,12 +1,19 @@
+/**
+*@author Collin Bolles
+*This header file cointains all the code for the autonomous period of the robot. Included is code to 
+*generate an x,y coordinate of the robot as it moves across the field. This allows for easier control 
+*over the robot. Instead of having the robot move for an arbitary length of time, the robot moves for a 
+*distance. Four autonomous periods are in this file.
 
+*/
 /*--------------------------------Odometry Variables--------------------------------*/
 float WHEEL_BASE = 66;
 float LEFT_CLICKS_PER_CM = 10.63;
 float RIGHT_CLICKS_PER_CM = 10.63;
-float theta = 270;                    /* bot heading */
-float X_pos=0;                    /* bot X position in inches */
-float Y_pos=0;                    /* bot Y position in inches */
-float traveled = 0;								//distanced traveled from set point
+float theta = 270;                   ///robot heading in degres
+float X_pos=0;                    	 //robot x position in cm
+float Y_pos=0;                    	 // robot y position in cm
+float traveled = 0;					 //
 float currentVelocity = 0;
 /*----------------------------------------------------------------------------------*/
 
@@ -23,11 +30,9 @@ int lockArmPositionUser = 0;
 
 /*----------------------------Arm movement functions--------------------------------*/
 
-/*
-	<summary>
-	Runs the arm at a given value
-	</summary
-	<param id=speed>PWM value, positive or negetive</param>
+/**
+*Runs all six VEX motors on the arm at a set PWM value
+*@param speed PWM value, positive or negetive
 */
 void moveArm(int speed)
 {
@@ -39,23 +44,19 @@ void moveArm(int speed)
 	lockArmPositionUser = nMotorEncoder[topRight];
 }
 
-/*
-	<summary>
-	Converts the target degrees of the arm to motor encoder ticks
-	</summary>
-	<param id=degrees> Degress the arm should move</param>
+/**
+*Converts the target degrees of the arm to motor encoder ticks
+*@param degrees Degress the arm should move
 */
 int degreesToTicks(int degrees)
 {
-	return (int)(degrees / 0.078);//0079 degrees per tick
+	return (int)(degrees / 0.078);//0078 degrees per tick
 }
 
-/*
-	<summary>
-	Has the arm move to a specific angle at a given speed
-	</summary>
-	<param id=degrees>Degrees the arm should move, does not represent a position</param>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the arm move to a specific angle at a given PWM value
+*@param degrees Degrees the arm should move, does not represent a position
+*@param speed PWM value, positive only
 */
 void moveArmDegree(float degrees, int speed)
 {
@@ -81,11 +82,9 @@ void moveArmDegree(float degrees, int speed)
 /*----------------------------------------------------------------------------------*/
 
 /*---------------------------Drive base functions-----------------------------------*/
-/*
-	<summary>
-	Has the robot drive forward at a given speed
-	</summary>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the robot drive forward at a given speed
+*@param speed PWM value, positive only
 */
 void driveForward(int speed)
 {
@@ -96,11 +95,9 @@ void driveForward(int speed)
 	motor[frontLeft] = speed;
 }
 
-/*
-	<summary>
-	Has the robot drive backward at a given speed
-	</summary>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the robot drive backward at a given speed
+*@param speed PWM value, positive only
 */
 void driveBackward(int speed)
 {
@@ -111,11 +108,9 @@ void driveBackward(int speed)
 	motor[frontLeft] = -speed;
 }
 
-/*
-	<summary>
-	Has the robot drive towards the left at a given speed
-	</summary>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the robot drive towards the left at a given speed
+*@param speed PWM value, positive only
 */
 void driveLeftward(int speed)
 {
@@ -126,11 +121,9 @@ void driveLeftward(int speed)
 	motor[backLeft] = -speed;
 }
 
-/*
-	<summary>
-	Has the robot drive towards the right at a given speed
-	</summary>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the robot drive towards the right at a given speed
+*@param speed PWM value, positive only
 */
 void driveRightward(int speed)
 {
@@ -141,11 +134,9 @@ void driveRightward(int speed)
 	motor[backLeft] = speed;
 }
 
-/*
-	<summary>
-	Turn the robot to to the right at a given speed
-	</summary>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Turn the robot to to the right at a given speed
+*@param speed PWM value, positive only
 */
 void turnRight(int speed)
 {
@@ -156,11 +147,9 @@ void turnRight(int speed)
 	motor[backLeft] = -speed;
 }
 
-/*
-	<summary>
-	Turn the robot to to the left at a given speed
-	</summary>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Turn the robot to to the left at a given speed
+*@param speed PWM value, positive only
 */
 void turnLeft(int speed)
 {
@@ -171,10 +160,8 @@ void turnLeft(int speed)
 	motor[backLeft] = speed;
 }
 
-/*
-	<summary>
-	Stops all base motors
-	</summary>
+/**
+*Stops all base motors
 */
 void stopBase()
 {
@@ -185,11 +172,13 @@ void stopBase()
 	motor[backLeft] = 0;
 }
 
-/*
-	<summary>
-	Calulates how far the robot has to go for friction to entierly stop the robot.
-	Requires calculateFrictionForce to run once before hand
-	</summary>
+/**
+*Calculates the distance required for friction alone to stop the robot as it travles a t a given velocity.
+*The equations uses the law of conservation of energy to calculate the stopping distance. The equation used is  below
+*Change_In_Kinetic_Energy=Work_Done_On_System
+*M=mass of robot, Vf=final velocity, V0=initial velocity, F=friction force, D=stopping distance.
+*1/2MVf^2-1/2MV0^2=F*D In which Vf is zero (when it stops moving)
+*D=(M*V0^2)/(2*F)
 */
 float calculateStoppingDistance()
 {
@@ -201,12 +190,10 @@ float calculateStoppingDistance()
 	return (massOfRobot*pow(currentVelocity,2))/(2*frictionForce);
 }
 
-/*
-	<summary>
-	Has the robot drive forward for a given distance at a given speed
-	</summary>
-	<param id=targetDistance>Distance in cm the robot has to go</param>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the robot drive forward for a given distance at a given speed
+*@param targetDistance Distance in cm the robot has to go
+*@param speed PWM value, positive only
 */
 void driveForward(int targetDistance, int speed)
 {
@@ -224,12 +211,10 @@ void driveForward(int targetDistance, int speed)
 	stopBase();
 }
 
-/*
-	<summary>
-	Has the robot drive backward for a given distance at a given speed
-	</summary>
-	<param id=targetDistance>Distance in cm the robot has to go</param>
-	<param id=speed>PWM value, positive only</param>
+/**
+*Has the robot drive backward for a given distance at a given speed
+*@param targetDistance Distance in cm the robot has to go
+*@param speed PWM value, positive only
 */
 void driveBackward(int targetDistance, int speed)
 {
@@ -247,26 +232,23 @@ void driveBackward(int targetDistance, int speed)
 	stopBase();
 }
 
-/*
-	<summary>
-	Determines if the robot is within a target theta by a given tolerance
-	</summary>
-	<param id=value>Current theta of the robot in degrees</param>
-	<parma id=target>Target theta in degrees</param>
-	<parma id=tolerance>How close the robot has to be to the target value (+-)</param>
+/**
+*Determines if the robot is within a target theta by a given tolerance
+*@param value Current theta of the robot in degrees
+*@param target Target theta in degrees
+*@param tolerance How close the robot has to be to the target value (+-)
+*@return True if the robot is within the tolerance of the target theta
 */
 bool inRange(float value, float target, float tolerance)
 {
 	return abs(value-target) <= tolerance;
 }
 
-/*
-	<summary>
-	Has the robot turn right to a given angle at a given speed and tolerance
-	</summary>
-	<param id=targetTheta>Target theta in degrees for robot to turn to</param>
-	<param id=speed>PWM value, positive only</parma>
-	<param id=tolerance>Tolerance the robot theta can be to the target theta</param>
+/**
+*Has the robot turn right to a given angle at a given speed and tolerance
+*@param targetTheta Target theta in degrees for robot to turn to
+*@param speed PWM value, positive only
+*@param tolerance Tolerance the robot theta can be to the target theta
 */
 void turnRight(float targetTheta, int speed, int tolerance)
 {
@@ -277,13 +259,11 @@ void turnRight(float targetTheta, int speed, int tolerance)
 	stopBase();
 }
 
-/*
-	<summary>
-	Has the robot turn left to a given angle at a given speed and tolerance
-	</summary>
-	<param id=targetTheta>Target theta in degrees for robot to turn to</param>
-	<param id=speed>PWM value, positive only</parma>
-	<param id=tolerance>Tolerance the robot theta can be to the target theta</param>
+/**
+*Has the robot turn left to a given angle at a given speed and tolerance
+*@param targetTheta Target theta in degrees for robot to turn to
+@param speed PWM value, positive only
+@param tolerance Tolerance the robot theta can be to the target theta
 */
 void turnLeft(float targetTheta, int speed, int tolerance)
 {
@@ -325,11 +305,9 @@ void goToPoint(float x, float y, int speed)
 }
 /*----------------------------------------------------------------------------------*/
 
-/*
-	<summary>
-	Calculates the x and y coordinates in cm and theta in degrees of the robot.
-	Task has to be running to call base control functions
-	</summary>
+/**
+*Calculates the x and y coordinates in cm and theta in degrees of the robot.
+*Task has to be running to call base control functions
 */
 task odometry()
 {
@@ -403,10 +381,8 @@ task odometry()
 	}
 }
 
-/*
-	<summary>
-	Has the right pincer open to a fixed position
-	</summary>
+/**
+*Has the right pincer open to a fixed position
 */
 task openPincer()
 {
@@ -421,10 +397,8 @@ task openPincer()
 	motor[leftPincer] = 0;
 }
 
-/*
-	<summary>
-	Has the right pincer close to a fixed position at a fixed speed
-	</summary>
+/**
+*Has the right pincer close to a fixed position at a fixed speed
 */
 task closePincer()
 {
@@ -439,10 +413,8 @@ task closePincer()
 	motor[leftPincer] = 0;
 }
 
-/*
-	<summary>
-	Has the right pincer open as far as possible at a fixed speed
-	</summary>
+/**
+*Has the right pincer open as far as possible at a fixed speed
 */
 task farPincer()
 {
@@ -461,30 +433,20 @@ void farPincers()
 {
 	startTask(farPincer);
 }
-/*
-	<summary>
-	Calls the open pincer tasks
-	</summary>
-*/
+
 void openPincers()
 {
 	startTask(openPincer);
 }
 
-/*
-	<summary>
-	Calls the close pincer tasks
-	</summary>
-*/
 void closePincers()
 {
 	startTask(closePincer);
 }
 
-/*
-	<summary>
-	Has the right wheel align itself over the white midline at a fixed speed
-	</summary>
+/**
+*Has the right wheel align itself over the white midline at a fixed speed using a light sensor to check for the
+*white electric tape midline.
 */
 bool doneRight = false;
 bool doneLeft = false;
@@ -512,10 +474,9 @@ task midLineRight()
 	doneRight = true;
 }
 
-/*
-	<summary>
-	Has the left wheel align itself over the white midline at a fixed speed
-	</summary>
+/**
+*Has the left wheel align itself over the white midline at a fixed speed using a light sensor to check for the
+*white electric tape midline.
 */
 task midLineLeft()
 {
@@ -550,10 +511,10 @@ void goPastStartTile()
 	stopBase();
 }
 
-/*
-	<summary>
-	Has both wheels align themselves over the white midline
-	</summary>
+/**
+*Has both the right and left wheels align themselves over the white electric tape midline. Since
+*the robot bounces off the VEX wall at some unknown angle. This function realigns the robot
+* to a known theta.
 */
 void goToMidLine()
 {
@@ -565,11 +526,8 @@ void goToMidLine()
 	}
 }
 
-/*
-	<summary>
-	Sets the default global varaibles. Must be called
-	before any other function!
-	</summary>
+/**
+*Sets the default global varaibles. Must be called before any other function!
 */
 void setToDefault()
 {
@@ -589,10 +547,10 @@ In here will be functions to tell which value a potentiometer is at to determine
 auto to run
 */
 /*------------------------------------------------------------------------------------*/
-/*
-	<summary>
-	Calculates the friction present on the robot
-	</summary>
+/**
+*Estimates the force of friction that exits between the tiles and the VEX wheels by appling the
+*same equation mentions in calculateStoppingDistance() except the equation is calcualted for 
+* force of friction.
 */
 void calculateFrictionForce()
 {
@@ -612,10 +570,12 @@ void calculateFrictionForce()
 	writeDebugStreamLine("friction_Force: %f", stoppingDistance);
 }
 
-/*
-	<summary>
-	Allows the user to lock the arm at a given position
-	</summary>
+/**
+*Function which controls how much additional power has to be sent to the robot to arm to keep it set at a given
+*postion. As soon as input is no longer sent to the arm with in the form of an auto function call or a driver
+*input, a lock position is set based off of a VEX motor encoder value. The function then works to keep the arm
+*close to this lock position by adding power to the arm each time the arm falls below the tolerated position. 
+*This allows the robot to hold weight without dropping the load.
 */
 void lockArmUser()
 {
@@ -632,11 +592,8 @@ void lockArmUser()
 /*
 
 /*---------------------------Autos----------------------------------------------------*/
-/*
-	<summary>
-	Drops star onto claw, drive up to near wall. Dumps preload
-	and opens pincers to knock all stars off the near wall
-	</summary>
+/**
+*Drops star onto claw, drive up to near wall. Dumps preload and opens pincers to knock all stars off the near wall
 */
 void basicAuto(bool right)
 {
@@ -678,11 +635,8 @@ void basicAuto(bool right)
 	moveArmDegree(-100, 75);
 }
 
-/*
-	<summary>
-	Runs basic auto, then goes to midline to realign then
-	picks up cube, dumping it on the middle fence
-	</summary>
+/**
+*Runs basic auto, then goes to midline to realign then picks up cube, dumping it on the middle fence
 */
 void cube(bool right)
 {
@@ -731,10 +685,8 @@ void cube(bool right)
 	wait1Msec(1000);
 }
 
-/*
-	<summary>
-	Picks up the back three stars and dump them on the near wall
-	</summary>
+/**
+*Picks up the back three stars and dump them on the near wall
 */
 void backStars(bool right)
 {
@@ -767,11 +719,8 @@ void backStars(bool right)
 
 }
 
-/*
-	<summary>
-	Picks up the preload and the back single star and dumps
-	them on the near wall
-	</summary>
+/**
+*Picks up the preload and the back single star and dumps them on the near wall
 */
 void backTwo(bool right)
 {
