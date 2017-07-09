@@ -1,1 +1,1 @@
-**# VEX Team 8828B Bluestreaks Robotics 2016-2017 Starstuck game code #**
+# VEX Team 8828B Bluestreaks Robotics 2016-2017 Starstuck game code  #
